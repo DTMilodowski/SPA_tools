@@ -24,7 +24,7 @@ branch_file = '../../../BALI_traits_data/CombinedPlots/ParameterTrees_Combined_1
 leaf_file = '../../../BALI_traits_data/CombinedPlots/LeafArea_Combined_14122016.csv'
 
 # Load in the traits
-branch, spp, N, C, CNratio, SLA, LMA, LeafArea, LeafThickness, LeafHeight, VPD, Rd, Vcmax, Jmax, ShadeTag, ftype = field.collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_file)
+branch, spp, genus, N, C, CNratio, SLA, LMA, LeafArea, LeafThickness, LeafHeight, VPD, Rd, Vcmax, Jmax, ShadeTag, ftype = field.collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_file)
 
 LeafThickness[LeafThickness>0.60]=np.nan
 Vcmax[Vcmax>150]=np.nan
