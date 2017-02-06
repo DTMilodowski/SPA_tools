@@ -25,7 +25,15 @@ def load_species_list(spp_file):
     keep = spp_data['data_quality']==1
     branch = spp_data['code'][keep]
     spp = spp_data['spp'][keep]
-    return branch,spp
+
+    # get genus from spp
+    N = spp.size
+    G=[]
+    for i in range(N):
+        G.append(spp[i].split(' ')[0])
+        print G[i]
+    genus = np.asarray(G)
+    return branch,spp, genus
 
 def load_photosynthesis_data(photo_file):
     datatype = {'names': ('Licor', 'code', 'Obs', 'Time', 'FTime', 'EBal', 'Photo', 'Cond', 'Ci', 'Trmmol', 'VpdL', 'CTleaf','Area', 'BLC_1', 'StmRat','BLCond','Tair','Tleaf','Tblk','CO2R','CO2S','H2OR','H2OS','RH_R','RH_S','Flow','PARi','PARo','Press','CsMch','HsMch','CsMchSD','HsMchSD','CrMchSD','HrMchSD','StableF','BLCslope','BLCoffst','f_parin','f_parout','alphaK'), 'formats': ('i8','S32','i8','S32','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16')}
@@ -494,7 +502,7 @@ def collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_f
 
     forest_type_chem, branch_ID_chem, N_perc, C_perc, CN = load_leaf_chemistry(chem_file)
     
-    branch_ID_spp, spp = load_species_list(spp_file)
+    branch_ID_spp, spp, genus = load_species_list(spp_file)
 
     unique_branches = np.unique(np.concatenate((branch_ID,branch_ID_chem,branch_ID_photo, branch_ID_leaf,branch_ID_spp)))
     N = unique_branches.size
