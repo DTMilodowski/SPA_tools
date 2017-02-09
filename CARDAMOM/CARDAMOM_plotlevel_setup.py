@@ -9,4 +9,25 @@
 # These all provide priors into the simulation which in turn help to refine the acceptable parameter space for
 # the various parameters in DALEC that will form the starting point for subsequent more detailed SPA modelling.
 
-# CARDAMOM-DALEC is driven with remotely sensed meteorologoical data - from ERA-Interim Reanalysis and TRMM
+# CARDAMOM-DALEC is driven with remotely sensed meteorologoical data - from ERA-Interim Reanalysis and TRMM.
+# At the plot level, I do not generally include fire and/or deforestation unless directly observed in the
+# field campaigns - this is not observed at BALI sites
+
+# import some libraries - update as required
+import numpy as np
+import sys
+sys.path.append("/home/dmilodow/DataStore_DTM/BALI/MetDataProcessing/ERAinterim/")
+sys.path.append("/home/dmilodow/DataStore_DTM/BALI/MetDataProcessing/UtilityTools/")
+sys.path.append("/home/dmilodow/DataStore_DTM/BALI/MetDataProcessing/TRMM/")
+sys.path.append("/home/dmilodow/DataStore_DTM/BALI/MetDataProcessing/gapfilling/")
+
+import weather_generator_BALI as wg
+from statistics_tools import *
+from metdata_processing import *
+import TRMM_processing as TRMM
+
+sys.path.append("/home/dmilodow/DataStore_DTM/BALI/SPA_BALI_data_and_analysis/scripts/field_data/")
+import load_field_data as field
+
+sys.path.append("/home/dmilodow/DataStore_DTM/BALI/SPA_BALI_data_and_analysis/scripts/construct_drivers/")
+import construct_met_drivers as construct_met
