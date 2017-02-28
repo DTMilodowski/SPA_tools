@@ -13,6 +13,12 @@
 # At the plot level, I do not generally include fire and/or deforestation unless directly observed in the
 # field campaigns - this is not observed at BALI sites
 
+# The code uses rpy2 (or r2py?) to interface with routines written in R by Luke Smallman to run
+# CARDAMOM.  This enables the user to process priors and drivers using python scripts and feed these into
+# the preexisting R-routines for running the model.  The advantage of this is that it limits the extent to
+# which code is duplicated while retaining flexibility to utilise python for data i/o and processing and display
+# of inputs/outputs.
+
 # import some libraries - update as required
 import numpy as np
 import sys
@@ -31,3 +37,4 @@ import load_field_data as field
 
 sys.path.append("/home/dmilodow/DataStore_DTM/BALI/SPA_BALI_data_and_analysis/scripts/construct_drivers/")
 import construct_met_drivers as construct_met
+
