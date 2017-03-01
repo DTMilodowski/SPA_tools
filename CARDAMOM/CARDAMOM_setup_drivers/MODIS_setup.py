@@ -33,5 +33,10 @@ def download_MODIS_LAI_for_point(latitude,longitude,start_date,end_date,ProductA
         'coordinate': '{0},{1}'.format(latitude, longitude),
         'format': 'json'
     }
+    
+    sample_req = requests.get(sample_url, params = sample_args)
+    samples = sample_req.json()
 
-    return LAI, LAI_std, LAI_qc
+    # read LAI and LAI_std into arrays for dates when quality flag is good. 
+
+    return dates, LAI, LAI_std
