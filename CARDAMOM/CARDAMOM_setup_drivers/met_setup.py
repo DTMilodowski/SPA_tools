@@ -63,7 +63,28 @@ def generate_daily_met_drivers_ERAinterim_TRMM(ERA_file, TRMM_file, start_date, 
     TRMM_dates_only =  TRMM_dates_init.astype('datetime64[D]')
     TRMM_dates = np.unique(TRMM_dates_only)
     N_TRMM = TRMM_dates.size
-    pptn = np.zeros(N_TRMM)
+    TRMM_pptn = np.zeros(N_TRMM)
     for dd in range(0,N_TRMM):
-        pptn[dd] = np.sum(TRMM_pptn_init[TRMM_dates_init==TRMM_dates[dd]])
+        TRMM_pptn[dd] = np.sum(TRMM_pptn_init[TRMM_dates_init==TRMM_dates[dd]])
 
+    # Now cut time series to period of interest
+    start = np.datetime64(start_date,'D')
+    end = np.datetime64(end,'D')
+    if TRMM_dates[0]>start:
+        print "Issue with TRMM - time series starts too late for period of interest"
+    if TRMM_dates[-1]<end:
+        print "Issue with TRMM - time series finishes too early for period of interest"
+    if ERA_dates[0]>start:
+        print "Issue with ERA-Interim - time series starts too late for period of interest"
+    if ERA_dates[-1]<end:
+        print "Issue with ERA-Interim - time series finishes too early for period of interest"
+    TRMM_mask = np.all((TRMM_dates>=start,TRMM_dates<=end),axis=0)
+    ERA_mask = np.all((ERA_dates>=start,ERA_dates<=end),axis=0)
+    
+    dates_out = ERA_dates[ERA_mask]
+    ssrd_out = ssrd[ERA_mask]
+    vpd_out = vpd[ERA_mask]
+    mn2t_out = mn2t[ERA_mask]
+    mx2t_out = mx2t[ERA_mask]
+    pptn_out = TRMM_pptn[TRMM_mask]
+    return dates_out,mn2t_out,mx2t_out,vpd_out,ssrd_out,pptn_out
