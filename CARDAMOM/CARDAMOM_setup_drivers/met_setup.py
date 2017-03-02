@@ -18,12 +18,13 @@ from metdata_processing import *
 import TRMM_processing as TRMM
 
 # generate daily met drivers from ERA-Interim and TRMM
-def generate_daily_met_drivers_ERAinterim_TRMM(ERA_file, TRMM_file, start_date, end_date, time_zone_shift):
+# currently do not use shift in time zone, so min, max
+# mean and cumulative variables represent GMT "days"
+def generate_daily_met_drivers_ERAinterim_TRMM(ERA_file, TRMM_file, start_date, end_date):
     
    # read in ERA interim.
-    ERA_start = '01/01/2011 00:00'
-    tstep = 0.5
-    ERA_start_date = np.datetime64(dt.datetime.strptime(ERA_start, '%d/%m/%Y %H:%M')) - np.timedelta64(time_zone_shift,'h')
+    ERA_start = '2011-01-01'
+    ERA_start_date = np.datetime64(ERA_start,'D')# - np.timedelta64(time_zone_shift,'h')
 
     sw_eraint, tair_eraint, pptn_eraint, rh_eraint, sp_eraint = wg.readInEraInterim(ERA_file,1) 
     sw_era = sw_eraint[:sw_eraint.size/2].astype('float')  
@@ -36,11 +37,24 @@ def generate_daily_met_drivers_ERAinterim_TRMM(ERA_file, TRMM_file, start_date, 
     n_days_eraint = tair_eraint.size/4
     n_tsteps_ERA = int(n_days_eraint*24/tstep)
     
-    ERA_dates = np.zeros(n_tsteps_ERA).astype('datetime64[m]')
-    for i in range(0,n_tsteps_ERA):
-        time_increment = int(i*(tstep*60))
-        ERA_dates[i]=ERA_start_date+np.timedelta64(time_increment,'m')
-    ERA_dates = 
+    mn2t = np.zeros(n_days_eraint)
+    mx2t = np.zeros(n_days_eraint)
+    ssrd = np.zeros(n_days_eraint)
+    vpd = np.zeros(n_days_eraint)
+    ERA_dates = np.zeros(n_days_eraint,dtype='datetime64[D]')
+    iter_2 = 0
+    iter_4 = 0
+    for dd in range(0,n_days_eraint):
+        # airT and rh both reported quarterly
+        mn2t[dd]=np.min(airT_era[dd*iter_4:(dd+1)*iter_4])
+        mx2t[dd]=np.max(airT_era[dd*iter_4:(dd+1)*iter_4])
+        vpd_era[dd] = np.mean(vpd_era[dd*iter_4:(dd+1)*iter_4])
+
+        # sw rad reported as 12hr totals
+        ssrd[dd]=np.sum(sw_era[dd*iter_2:(dd+1)*iter_2])
+    
+        ERA_dates[dd] = ERA_start+np.timedelta64(1,'D')
+
     ###############
     # Now load TRMM
     print TRMM_file
