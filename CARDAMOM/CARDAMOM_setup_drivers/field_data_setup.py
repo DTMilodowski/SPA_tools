@@ -23,6 +23,7 @@ def get_Croot_NPP_ts(roots_file,plot):
     collection_dates = []
     previous_collection_dates = []
     NPP = []
+    NPP_std = []
     for i in range(0,N_collections):
         # check that there is a collection this year
         if np.max(rootNPP[plot]['CollectionDate'][:,i])>np.datetime64('2000-01-01'):
@@ -31,8 +32,9 @@ def get_Croot_NPP_ts(roots_file,plot):
             # avoid nodata for missing/destroyed traps
             jj = np.isfinite(rootNPP[plot]['FineRootNPP'][:,i])
             NPP.append(np.mean(rootNPP[plot]['FineRootNPP'][jj,i]))
+            NPP_std.append(np.std(rootNPP[plot]['FineRootNPP'][jj,i]))
         
-    return np.asarray(collection_dates), np.asarray(previous_collection_dates), np.asarray(NPP)
+    return np.asarray(collection_dates), np.asarray(previous_collection_dates), np.asarray(NPP), np.asarray(NPP_std)
     
 # Get time series of litter fall
 def get_litterfall_ts(litter_file,plot):
@@ -41,6 +43,7 @@ def get_litterfall_ts(litter_file,plot):
     collection_dates = []
     previous_collection_dates = []
     litter_fall = []
+    litter_std = []
     for i in range(0,litter[plot]['rTotal'].shape[1]):
         collection_dates.append(np.max(litter[plot]['CollectionDate'][:,i]))
         previous_collection_dates.append(np.max(litter[plot]['PreviousCollectionDate'][:,i]))
@@ -48,5 +51,6 @@ def get_litterfall_ts(litter_file,plot):
         # avoid nodata for missing/destroyed traps
         jj = np.isfinite(litter[plot]['rTotal'][:,i])
         litter_fall.append(np.mean(litter[plot]['rTotal'][jj,i]))
+        litter_std.apped(np.std(litter[plot]['rTotal'][jj,i]))
         
-    return np.asarray(collection_dates), np.asarray(previous_collection_dates), np.asarray(litter_fall)
+    return np.asarray(collection_dates), np.asarray(previous_collection_dates), np.asarray(litter_fall), np.asarray(litter_std)
