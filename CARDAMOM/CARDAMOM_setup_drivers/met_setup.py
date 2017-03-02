@@ -56,8 +56,14 @@ def generate_daily_met_drivers_ERAinterim_TRMM(ERA_file, TRMM_file, start_date, 
         ERA_dates[dd] = ERA_start+np.timedelta64(1,'D')
 
     ###############
-    # Now load TRMM
+    # Now load TRMM - TRMM is reported as three hourly totals
     print TRMM_file
     TRMM_dates_init, TRMM_pptn_init = TRMM.read_TRMM_file(TRMM_file)
 
+    TRMM_dates_only =  TRMM_dates_init.astype('datetime64[D]')
+    TRMM_dates = np.unique(TRMM_dates_only)
+    N_TRMM = TRMM_dates.size
+    pptn = np.zeros(N_TRMM)
+    for dd in range(0,N_TRMM):
+        pptn[dd] = np.sum(TRMM_pptn_init[TRMM_dates_init==TRMM_dates[dd]])
 
