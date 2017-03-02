@@ -16,8 +16,8 @@ def get_Cwood_ts(census_file,plot):
 
     return collection_date, plot_biomass
 
-# Get time series of fine root biomass
-def get_Croot_NPP_ts(roots_file,plot):
+# Get time series of fine root NPP
+def get_root_NPP_ts(roots_file,plot):
     rootStocks,rootNPP = field.read_soil_stocks_and_npp(roots_file)
     N_collections = rootNPP[plot]['AccumulationDays'].shape[1]
     collection_dates = []
