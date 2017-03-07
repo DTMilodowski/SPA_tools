@@ -2,6 +2,14 @@
 import numpy as np
 import requests
 
+# This function loads in MODIS time series for point locations from the data file downloaded via AppEARS:  https://lpdaacsvc.cr.usgs.gov/appeears/
+def load_point_MODIS_LAI_time_series_from_file(MODIS_file):
+
+    return dates, LAI, LAI_std
+
+"""
+### Issues with script-based interfacing to LP DAAC server. 
+
 # This is the URL for downloading MODIS data
 SERVICES_URL = 'https://lpdaacsvc.cr.usgs.gov/services/appeears-api'
 
@@ -40,3 +48,4 @@ def download_MODIS_LAI_for_point(latitude,longitude,start_date,end_date,ProductA
     # read LAI and LAI_std into arrays for dates when quality flag is good. 
 
     return dates, LAI, LAI_std
+"""
