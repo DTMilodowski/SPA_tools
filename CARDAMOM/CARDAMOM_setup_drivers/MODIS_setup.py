@@ -11,12 +11,15 @@ def load_point_MODIS_LAI_time_series_from_file(MODIS_file):
     N = plots.size
     
     QC_MODLAND = data['MOD15A2H_006_FparLai_QC_MODLAND']=='0b0'
+    print QC_MODLAND.sum()
     QC_dead = data['MOD15A2H_006_FparLai_QC_DeadDetector']=='0b0'
-    QC_clouds] = np.any((data['MOD15A2H_006_FparLai_QC_CloudState']=='0b00',data['MOD15A2H_006_FparLai_QC_CloudState']=='0b01'),axis=0)
+    print QC_dead.sum()
+    QC_clouds = np.any((data['MOD15A2H_006_FparLai_QC_CloudState']=='0b00',data['MOD15A2H_006_FparLai_QC_CloudState']=='0b01'),axis=0)
+    print QC_clouds.sum()
     QC_SCF = np.any((data['MOD15A2H_006_FparLai_QC_SCF_QC']=='0b000',data['MOD15A2H_006_FparLai_QC_SCF_QC']=='0b001'),axis=0)
-
+    print QC_SCF.sum()
     QC_overall = np.all((QC_MODLAND,QC_dead,QC_clouds,QC_SCF),axis=0)
-
+    print QC_overall.sum()
     for pp in range(0,N):
         plot_dict = {}
         indices = np.all((data['plot']==plots[pp],QC_overall),axis=0)
