@@ -6,7 +6,29 @@ import requests
 def load_point_MODIS_LAI_time_series_from_file(MODIS_file):
     dtype={'names':('category','plot','lat','lon','date','MODIS_tile','MOD15A2H_006_Line_Y_500m','MOD15A2H_006_Sample_X_500m','MOD15A2H_006_FparExtra_QC','MOD15A2H_006_FparStdDev_500m','MOD15A2H_006_Fpar_500m','MOD15A2H_006_LaiStdDev_500m','MOD15A2H_006_Lai_500m','MOD15A2H_006_FparLai_QC', 'MOD15A2H_006_FparLai_QC_bitmask','MOD15A2H_006_FparLai_QC_MODLAND','MOD15A2H_006_FparLai_QC_MODLAND_Description','MOD15A2H_006_FparLai_QC_Sensor','MOD15A2H_006_FparLai_QC_Sensor_Description','MOD15A2H_006_FparLai_QC_DeadDetector','MOD15A2H_006_FparLai_QC_DeadDetector_Description', 'MOD15A2H_006_FparLai_QC_CloudState','MOD15A2H_006_FparLai_QC_CloudState_Description','MOD15A2H_006_FparLai_QC_SCF_QC','MOD15A2H_006_FparLai_QC_SCF_QC_Description'),'formats':('S8','S8','f16','f16','S10','S8','i8','i8','i8','f16','f16','f16','f16','i8','S10','S4','S132','S4','S5','S4','S132','S4','S64','S5','S132')}
     data = np.genfromtxt(MODIS_file,skiprows=1,delimiter=',',dtype=dtype)
-    return dates, LAI, LAI_std
+    LAI_dict = {}
+    plots = np.unique(data['plot'])
+    N = plots.size
+    
+    QC_MODLAND = data['MOD15A2H_006_FparLai_QC_MODLAND']=='0b0'
+    QC_dead = data['MOD15A2H_006_FparLai_QC_DeadDetector']=='0b0'
+    QC_clouds] = np.any((data['MOD15A2H_006_FparLai_QC_CloudState']=='0b00',data['MOD15A2H_006_FparLai_QC_CloudState']=='0b01'),axis=0)
+    QC_SCF = np.any((data['MOD15A2H_006_FparLai_QC_SCF_QC']=='0b000',data['MOD15A2H_006_FparLai_QC_SCF_QC']=='0b001'),axis=0)
+
+    QC_overall = np.all((QC_MODLAND,QC_dead,QC_clouds,QC_SCF),axis=0)
+
+    for pp in range(0,N):
+        plot_dict = {}
+        indices = np.all((data['plot']==plots[pp],QC_overall),axis=0)
+        plot_dict['LAI'] = data['MOD15A2H_006_Lai_500m'][indices]
+        plot_dict['LAI_std'] = data['MOD15A2H_006_LaiStdDev_500m'][indices]
+        dates = np.zeros(indices.sum(), dtype = 'datetime64[D]')
+        for dd in range(0,indices.sum()):
+            d,m,y = data['date'][indices][dd].split('/')
+            dates[dd] = np.datetime64(y+'-'+m+'-'+d,'D')
+        plot_dict['date']=dates
+        LAI_dict[plots[pp]]=plot_dict
+    return LAI_dict
 
 """
 ### Issues with script-based interfacing to LP DAAC server. 
