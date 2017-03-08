@@ -4,8 +4,8 @@ import requests
 
 # This function loads in MODIS time series for point locations from the data file downloaded via AppEARS:  https://lpdaacsvc.cr.usgs.gov/appeears/
 def load_point_MODIS_LAI_time_series_from_file(MODIS_file):
-    dtype={'names':('category','plot','lat','lon','date','MODIS_tile','MOD15A2H_006_Line_Y_500m','MOD15A2H_006_Sample_X_500m','MOD15A2H_006_FparExtra_QC','MOD15A2H_006_FparStdDev_500m','MOD15A2H_006_Fpar_500m','MOD15A2H_006_LaiStdDev_500m','MOD15A2H_006_Lai_500m','MOD15A2H_006_FparLai_QC', 'MOD15A2H_006_FparLai_QC_bitmask','MOD15A2H_006_FparLai_QC_MODLAND','MOD15A2H_006_FparLai_QC_MODLAND_Description','MOD15A2H_006_FparLai_QC_Sensor','MOD15A2H_006_FparLai_QC_Sensor_Description','MOD15A2H_006_FparLai_QC_DeadDetector','MOD15A2H_006_FparLai_QC_DeadDetector_Description', 'MOD15A2H_006_FparLai_QC_CloudState','MOD15A2H_006_FparLai_QC_CloudState_Description','MOD15A2H_006_FparLai_QC_SCF_QC','MOD15A2H_006_FparLai_QC_SCF_QC_Description'),'formats':('S32','S8','i8','S8','f16','f16','f16','f16','f16','S8')}
-    data = np.genfromtxt(chem_file,skiprows=1,delimiter=',',dtype=dtype)
+    dtype={'names':('category','plot','lat','lon','date','MODIS_tile','MOD15A2H_006_Line_Y_500m','MOD15A2H_006_Sample_X_500m','MOD15A2H_006_FparExtra_QC','MOD15A2H_006_FparStdDev_500m','MOD15A2H_006_Fpar_500m','MOD15A2H_006_LaiStdDev_500m','MOD15A2H_006_Lai_500m','MOD15A2H_006_FparLai_QC', 'MOD15A2H_006_FparLai_QC_bitmask','MOD15A2H_006_FparLai_QC_MODLAND','MOD15A2H_006_FparLai_QC_MODLAND_Description','MOD15A2H_006_FparLai_QC_Sensor','MOD15A2H_006_FparLai_QC_Sensor_Description','MOD15A2H_006_FparLai_QC_DeadDetector','MOD15A2H_006_FparLai_QC_DeadDetector_Description', 'MOD15A2H_006_FparLai_QC_CloudState','MOD15A2H_006_FparLai_QC_CloudState_Description','MOD15A2H_006_FparLai_QC_SCF_QC','MOD15A2H_006_FparLai_QC_SCF_QC_Description'),'formats':('S8','S8','f16','f16','S10','S8','i8','i8','i8','f16','f16','f16','f16','i8','S10','S4','S132','S4','S5','S4','S132','S4','S64','S5','S132')}
+    data = np.genfromtxt(MODIS_file,skiprows=1,delimiter=',',dtype=dtype)
     return dates, LAI, LAI_std
 
 """
