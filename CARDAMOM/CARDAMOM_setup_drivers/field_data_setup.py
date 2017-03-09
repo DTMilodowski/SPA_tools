@@ -1,5 +1,5 @@
 #This set of functions prepares field data from GEM plots ready for assimilation into CARDAMOM
-import numpy
+import numpy as np
 import sys
 sys.path.append('../../field_data/')
 
@@ -70,6 +70,6 @@ def get_litterfall_ts(litter_file,plot):
         # avoid nodata for missing/destroyed traps
         jj = np.isfinite(litter[plot]['rTotal'][:,i])
         litter_fall.append(np.mean(litter[plot]['rTotal'][jj,i]))
-        litter_std.apped(np.std(litter[plot]['rTotal'][jj,i]))
+        litter_std.append(np.std(litter[plot]['rTotal'][jj,i]))
         
     return np.asarray(collection_dates), np.asarray(previous_collection_dates), np.asarray(litter_fall), np.asarray(litter_std)
