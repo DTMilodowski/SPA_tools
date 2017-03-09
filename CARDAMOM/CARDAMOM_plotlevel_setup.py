@@ -22,12 +22,6 @@
 # import some libraries - update as required
 import numpy as np
 import sys
-sys.path.append("/home/dmilodow/DataStore_DTM/BALI/SPA_BALI_data_and_analysis/scripts/field_data/")
-import load_field_data as field
-
-sys.path.append("/home/dmilodow/DataStore_DTM/BALI/SPA_BALI_data_and_analysis/scripts/construct_drivers/")
-import construct_met_drivers as construct_met
-
 sys.path.append('/home/dmilodow/DataStore_DTM/BALI/SPA_BALI_data_and_analysis/scripts/CARDAMOM/CARDAMOM_setup_drivers/')
 import met_setup as met
 import MODIS_setup as MODIS
@@ -58,7 +52,7 @@ litter_file = '/home/dmilodow/DataStore_DTM/BALI/BALI_Cplot_data/SAFE_CarbonPlot
 #---------------------------------------------------------------------------------------------------------------
 # Now get some basic parameters for the run
 start_date= '01/01/2011'
-end_date= '01/01/2016'
+end_date= '01/03/2016'
 plot = 'Belian'
 
 # Initiate some arrays to host time series
