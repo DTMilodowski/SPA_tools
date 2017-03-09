@@ -87,14 +87,19 @@ LAI_std_in = np.zeros(N_t)
 #   -this function returns a dictionary with time series of meteorological variables to be assimilated into
 #    CARDAMOM
 #   - Variable keys: Time, airT, pptn, vpd, par, swr, sp
-met_dates, mn2t, mx2t, vpd, ssrd, pptn= met.generate_daily_met_drivers_ERAinterim_TRMM(ERA_file, TRMM_file, start, end)
+met_dates, mn2t, mx2t, vpd, ssrd, TRMM_dates, pptn= met.generate_daily_met_drivers_ERAinterim_TRMM(ERA_file, TRMM_file, start, end)
 N_m = met_dates.size
 for dd in range(0,N_m):
+    print met_dates[dd]
+    if met_dates[dd] in date:
+        print 'yes', mn2t[dd]
     mn2t_in[date == met_dates[dd]] = mn2t[dd]
     mx2t_in[date == met_dates[dd]] = mx2t[dd]
     ssrd_in[date == met_dates[dd]] = ssrd[dd]
     vpd_in[date == met_dates[dd]] = vpd[dd]
-    pptn_in[date == met_dates[dd]] = pptn[dd]
+N_trmm = TRMM_dates.size
+for dd in range(0,N_trmm):
+    pptn_in[date == TRMM_dates[dd]] = pptn[dd]
 #---------------------------------------------------------------------------------------------------------------
 # Process LAI data
 #   -this function returns a dictionary with time series of LAI from MODIS to drive DALEC.
