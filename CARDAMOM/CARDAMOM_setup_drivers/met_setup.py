@@ -28,15 +28,14 @@ def generate_daily_met_drivers_ERAinterim_TRMM(ERA_file, TRMM_file, start_date, 
     vpd_era=(0.6108*np.exp((17.27*airT_era)/(237.3+airT_era)))*(1-rh_era/100)
 
     n_days_eraint = tair_eraint.size/4
-    n_tsteps_ERA = int(n_days_eraint*24/tstep)
     
     mn2t = np.zeros(n_days_eraint)
     mx2t = np.zeros(n_days_eraint)
     ssrd = np.zeros(n_days_eraint)
     vpd = np.zeros(n_days_eraint)
     ERA_dates = np.zeros(n_days_eraint,dtype='datetime64[D]')
-    iter_2 = 0
-    iter_4 = 0
+    iter_2 = 2
+    iter_4 = 4
     for dd in range(0,n_days_eraint):
         # airT and rh both reported quarterly
         mn2t[dd]=np.min(airT_era[dd*iter_4:(dd+1)*iter_4])
@@ -46,7 +45,7 @@ def generate_daily_met_drivers_ERAinterim_TRMM(ERA_file, TRMM_file, start_date, 
         # sw rad reported as 12hr totals
         ssrd[dd]=np.sum(sw_era[dd*iter_2:(dd+1)*iter_2])
     
-        ERA_dates[dd] = ERA_start+np.timedelta64(1,'D')
+        ERA_dates[dd] = ERA_start_date+np.timedelta64(1,'D')*dd
 
     ###############
     # Now load TRMM - TRMM is reported as three hourly totals
@@ -58,11 +57,10 @@ def generate_daily_met_drivers_ERAinterim_TRMM(ERA_file, TRMM_file, start_date, 
     N_TRMM = TRMM_dates.size
     TRMM_pptn = np.zeros(N_TRMM)
     for dd in range(0,N_TRMM):
-        TRMM_pptn[dd] = np.sum(TRMM_pptn_init[TRMM_dates_init==TRMM_dates[dd]])
-
+        TRMM_pptn[dd] = np.sum(TRMM_pptn_init[TRMM_dates_only==TRMM_dates[dd]])
     # Now cut time series to period of interest
     start = np.datetime64(start_date,'D')
-    end = np.datetime64(end,'D')
+    end = np.datetime64(end_date,'D')
     if TRMM_dates[0]>start:
         print "Issue with TRMM - time series starts too late for period of interest"
     if TRMM_dates[-1]<end:
@@ -79,5 +77,6 @@ def generate_daily_met_drivers_ERAinterim_TRMM(ERA_file, TRMM_file, start_date, 
     vpd_out = vpd[ERA_mask]
     mn2t_out = mn2t[ERA_mask]
     mx2t_out = mx2t[ERA_mask]
+    TRMM_dates_out = TRMM_dates[TRMM_mask]
     pptn_out = TRMM_pptn[TRMM_mask]
-    return dates_out,mn2t_out,mx2t_out,vpd_out,ssrd_out,pptn_out
+    return dates_out,mn2t_out,mx2t_out,vpd_out,ssrd_out,TRMM_dates_out,pptn_out
