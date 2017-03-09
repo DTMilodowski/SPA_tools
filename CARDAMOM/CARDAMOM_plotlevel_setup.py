@@ -88,7 +88,13 @@ LAI_std_in = np.zeros(N_t)
 #    CARDAMOM
 #   - Variable keys: Time, airT, pptn, vpd, par, swr, sp
 met_dates, mn2t, mx2t, vpd, ssrd, pptn= met.generate_daily_met_drivers_ERAinterim_TRMM(ERA_file, TRMM_file, start, end)
-
+N_m = met_dates.size
+for dd in range(0,N_m):
+    mn2t_in[date == met_dates[dd]] = mn2t[dd]
+    mx2t_in[date == met_dates[dd]] = mx2t[dd]
+    ssrd_in[date == met_dates[dd]] = ssrd[dd]
+    vpd_in[date == met_dates[dd]] = vpd[dd]
+    pptn_in[date == met_dates[dd]] = pptn[dd]
 #---------------------------------------------------------------------------------------------------------------
 # Process LAI data
 #   -this function returns a dictionary with time series of LAI from MODIS to drive DALEC.
@@ -112,4 +118,4 @@ for dd in range(0,N_r):
 
 
 litter_collection_date, litter_previous_collection_date, litter_flux, litter_std = field.get_litterfall_ts(litter_file,plot)
-
+# work out what to do with litter data
