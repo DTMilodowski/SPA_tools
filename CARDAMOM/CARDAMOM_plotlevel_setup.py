@@ -90,9 +90,6 @@ LAI_std_in = np.zeros(N_t)
 met_dates, mn2t, mx2t, vpd, ssrd, TRMM_dates, pptn= met.generate_daily_met_drivers_ERAinterim_TRMM(ERA_file, TRMM_file, start, end)
 N_m = met_dates.size
 for dd in range(0,N_m):
-    print met_dates[dd]
-    if met_dates[dd] in date:
-        print 'yes', mn2t[dd]
     mn2t_in[date == met_dates[dd]] = mn2t[dd]
     mx2t_in[date == met_dates[dd]] = mx2t[dd]
     ssrd_in[date == met_dates[dd]] = ssrd[dd]
@@ -104,7 +101,7 @@ for dd in range(0,N_trmm):
 # Process LAI data
 #   -this function returns a dictionary with time series of LAI from MODIS to drive DALEC.
 LAI_dict = MODIS.load_point_MODIS_LAI_time_series_from_file(MODIS_file)
-LAI = LAI_dict['plot']
+LAI = LAI_dict[plot]
 N_LAI = LAI['date'].size
 for dd in range(0,N_LAI):
     LAI_in[date == LAI['date'][dd]] = LAI['LAI'][dd]
