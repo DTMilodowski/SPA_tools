@@ -27,8 +27,7 @@ ERA_file = '/home/dmilodow/DataStore_DTM/BALI/MetDataProcessing/ERAinterim/BALI_
 TRMM_file = '/home/dmilodow/DataStore_DTM/BALI/MetDataProcessing/TRMM/g4.areaAvgTimeSeries.TRMM_3B42_007_precipitation.20110101-20160429.117E_4N_117E_4N.csv'
 
 # LAI DATA
-#    -MODIS
-MODIS_file = '/home/dmilodow/DataStore_DTM/BALI/MODIS/BALI-GEM-MODIS-MOD15A2H-006-results.csv'
+# assume a constant LAI based on LiDAR data
 
 # FIELD DATA
 #    -Plot census data
@@ -53,18 +52,18 @@ end = np.datetime64(y+'-'+m+'-'+d,'D')
 date = np.arange(start,end, dtype = 'datetime64[D]')
 
 N_t = date.size
-mn2t_in = np.zeros(N_t)
-mx2t_in = np.zeros(N_t)
-vpd_in = np.zeros(N_t)
-ssrd_in = np.zeros(N_t)
-pptn_in = np.zeros(N_t)
+mn2t_in = np.zeros(N_t)*-9999.
+mx2t_in = np.zeros(N_t)*-9999.
+vpd_in = np.zeros(N_t)*-9999.
+ssrd_in = np.zeros(N_t)*-9999.
+pptn_in = np.zeros(N_t)*-9999.
 
-Cwood_in = np.zeros(N_t)
-Croot_in = np.zeros(N_t)
-Litter_in = np.zeros(N_t)
+Cwood_in = np.zeros(N_t)*-9999.
+Croot_in = np.zeros(N_t)*-9999.
+Litter_in = np.zeros(N_t)*-9999.
 
-LAI_in = np.zeros(N_t)
-LAI_std_in = np.zeros(N_t)
+LAI_in = np.zeros(N_t)*-9999.
+LAI_std_in = np.zeros(N_t)*-9999.
 
 #---------------------------------------------------------------------------------------------------------------
 # Process met data
@@ -82,15 +81,6 @@ N_trmm = TRMM_dates.size
 for dd in range(0,N_trmm):
     pptn_in[date == TRMM_dates[dd]] = pptn[dd]
 #---------------------------------------------------------------------------------------------------------------
-# Process LAI data
-#   -this function returns a dictionary with time series of LAI from MODIS to drive DALEC.
-LAI_dict = MODIS.load_point_MODIS_LAI_time_series_from_file(MODIS_file)
-LAI = LAI_dict[plot]
-N_LAI = LAI['date'].size
-for dd in range(0,N_LAI):
-    LAI_in[date == LAI['date'][dd]] = LAI['LAI'][dd]
-    LAI_std_in[date == LAI['date'][dd]] = LAI['LAI_std'][dd]
-#---------------------------------------------------------------------------------------------------------------
 # Process field data
 census_date, Cwood = field.get_Cwood_ts(census_file,plot)
 N_c = Cwood.size
@@ -104,4 +94,14 @@ for dd in range(0,N_r):
 
 
 litter_collection_date, litter_previous_collection_date, litter_flux, litter_std = field.get_litterfall_ts(litter_file,plot)
-# work out what to do with litter data
+
+# Initially assume average flux rates for litter between collection dates 
+N_lit=litter_flux.size
+
+for tt in range(0,N_lit):
+    indices = np.all((date>=litter_previous_collection_date[tt], date<litter_collection_date[tt]),axis=0)
+    n_days = np.float(litter_collection_date[tt]-litter_previous_collection_date[tt])
+    Litter_in[indices]= litter_flux[tt]/n_days
+    Litter_std_in[indices]= litter_std[tt]/n_days
+    
+    
