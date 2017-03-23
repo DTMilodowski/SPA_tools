@@ -574,7 +574,7 @@ def collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_f
     species = np.asarray(branch_spp)
     ForestType = np.asarray(branch_Ftype)
 
-    return unique_branches, species, branch_N, branch_C, branch_CNratio, branch_SLA, branch_LMA, branch_LeafArea, branch_LeafThickness, branch_LeafHeight, branch_VPD, branch_Rd, branch_Vcmax, branch_Jmax, branch_ShadeTag, ForestType
+    return unique_branches, species, genus, branch_N, branch_C, branch_CNratio, branch_SLA, branch_LMA, branch_LeafArea, branch_LeafThickness, branch_LeafHeight, branch_VPD, branch_Rd, branch_Vcmax, branch_Jmax, branch_ShadeTag, ForestType
 
 
 
