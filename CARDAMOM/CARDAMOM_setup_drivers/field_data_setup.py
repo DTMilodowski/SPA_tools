@@ -8,9 +8,7 @@ import load_field_data as field
 
 # Get time series of woody biomass
 def get_Cwood_ts(census_file,plot):
-    print 'getting census data'
     census = field.collate_plot_level_census_data(census_file)
-    print 'doing some calculations'
     plot_biomass = np.sum(census[plot]['C_wood'],axis=0)
     collection_date = np.max(census[plot]['CensusDate'],axis=0)
 
