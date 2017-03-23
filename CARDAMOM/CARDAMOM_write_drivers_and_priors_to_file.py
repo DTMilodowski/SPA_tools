@@ -89,18 +89,24 @@ for pp in range(0,len(plot)):
 
     #LAI_in = np.zeros(N_t)-9999.
     #LAI_std_in = np.zeros(N_t)-9999.
-    Csoil_in[0] = Csoil[pp]/100**2/1000. # convert kg/ha to g/m^3
+    
+    # soil carbon reported in g/m2
+    Csoil_in[0] = Csoil[pp]
 
+    # Cwood reported in kg (for 1ha plot)
     census_date, Cwood = field.get_Cwood_ts(census_file,plot[pp])
     N_c = Cwood.size
     for dd in range(0,N_c):
-        Cwood_in[date == census_date[dd]] = Cwood[dd] *1000./10.**4. # convert kg/ha to g/m^3
+        Cwood_in[date == census_date[dd]] = Cwood[dd] *1000./10.**4. # convert kg/ha to g/m^2
+
+    # root stocks reported in Mg/ha
     root_stock_date, Croot, Croot_std = field.get_Croot_ts(roots_file,plot[pp])
 
     N_r = Croot.size
     for dd in range(0,N_r):
-        Croot_in[date == root_stock_date[dd]] = Croot[dd]*10**6/10.**4 # convert Mg/ha to g/m^3
+        Croot_in[date == root_stock_date[dd]] = Croot[dd]*10**6/10.**4 # convert Mg/ha to g/m^2
     
+        # litter fluxes reported in Mg/ha/yr
     litter_collection_date, litter_previous_collection_date, litter_flux, litter_std = field.get_litterfall_ts(litter_file,plot[pp])
 
     # Initially assume average flux rates for litter between collection dates 
@@ -108,8 +114,8 @@ for pp in range(0,len(plot)):
     for tt in range(0,N_lit):
         indices = np.all((date>=litter_previous_collection_date[tt], date<litter_collection_date[tt]),axis=0)
         n_days = np.float((litter_collection_date[tt]-litter_previous_collection_date[tt])/ np.timedelta64(1, 'D'))
-        Litter_in[indices]= litter_flux[tt]/n_days * (10.**6/10.**4/365.25.) # convert Mg/ha/yr-1 to g/m-2/d-1
-        Litter_std_in[indices]= litter_std[tt]/n_days * (10.**6/10.**4/365.25) # convert Mg/ha/yr-1 to g/m-2/d-1
+        Litter_in[indices]= litter_flux[tt]/n_days * (10.**6/10.**4/365.25.) # convert Mg/ha/yr to g/m2/d
+        Litter_std_in[indices]= litter_std[tt]/n_days * (10.**6/10.**4/365.25) # convert Mg/ha/yr to g/m2/d
 
     # Convert nodata to -9999
     Litter_in[np.isnan(Litter_in)]=-9999.
