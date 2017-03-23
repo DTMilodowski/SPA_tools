@@ -61,6 +61,7 @@ pptn_in = np.zeros(N_t)*-9999.
 Cwood_in = np.zeros(N_t)*-9999.
 Croot_in = np.zeros(N_t)*-9999.
 Litter_in = np.zeros(N_t)*-9999.
+Litter_std_in = np.zeros(N_t)*-9999.
 
 LAI_in = np.zeros(N_t)*-9999.
 LAI_std_in = np.zeros(N_t)*-9999.
@@ -100,8 +101,9 @@ N_lit=litter_flux.size
 
 for tt in range(0,N_lit):
     indices = np.all((date>=litter_previous_collection_date[tt], date<litter_collection_date[tt]),axis=0)
-    n_days = np.float(litter_collection_date[tt]-litter_previous_collection_date[tt])
+    n_days = np.float((litter_collection_date[tt]-litter_previous_collection_date[tt])/ np.timedelta64(1, 'D'))
     Litter_in[indices]= litter_flux[tt]/n_days
     Litter_std_in[indices]= litter_std[tt]/n_days
     
     
+# write output to file
