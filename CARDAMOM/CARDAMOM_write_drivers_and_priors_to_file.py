@@ -80,6 +80,7 @@ for dd in range(0,N_trmm):
 # Process field data
 
 for pp in range(0,len(plot)):
+    print plot[pp]
     Cwood_in = np.zeros(N_t)-9999.
     Croot_in = np.zeros(N_t)-9999.
     Csoil_in = np.zeros(N_t)-9999.
@@ -88,31 +89,42 @@ for pp in range(0,len(plot)):
 
     #LAI_in = np.zeros(N_t)-9999.
     #LAI_std_in = np.zeros(N_t)-9999.
-    Csoil_in[0] = Csoil[pp]
-    
+    Csoil_in[0] = Csoil[pp]/100**2/1000. # convert kg/ha to g/m^3
+
     census_date, Cwood = field.get_Cwood_ts(census_file,plot[pp])
     N_c = Cwood.size
     for dd in range(0,N_c):
-        Cwood_in[date == census_date[dd]] = Cwood[dd]
-
+        Cwood_in[date == census_date[dd]] = Cwood[dd]/100**2/1000. # convert kg/ha to g/m^3
     root_stock_date, Croot, Croot_std = field.get_Croot_ts(roots_file,plot[pp])
+
     N_r = Croot.size
     for dd in range(0,N_r):
-        Croot_in[date == root_stock_date[dd]] = Croot[dd]
-
-
+        Croot_in[date == root_stock_date[dd]] = Croot[dd]/100**2/1000. # convert kg/ha to g/m^3
+    
     litter_collection_date, litter_previous_collection_date, litter_flux, litter_std = field.get_litterfall_ts(litter_file,plot[pp])
 
     # Initially assume average flux rates for litter between collection dates 
     N_lit=litter_flux.size
-    
     for tt in range(0,N_lit):
         indices = np.all((date>=litter_previous_collection_date[tt], date<litter_collection_date[tt]),axis=0)
         n_days = np.float((litter_collection_date[tt]-litter_previous_collection_date[tt])/ np.timedelta64(1, 'D'))
-        Litter_in[indices]= litter_flux[tt]/n_days
-        Litter_std_in[indices]= litter_std[tt]/n_days
+        Litter_in[indices]= litter_flux[tt]/n_days/100**2/1000. # convert kg/ha to g/m^3
+        Litter_std_in[indices]= litter_std[tt]/n_days/100**2/1000. # convert kg/ha to g/m^3
+
+    # Convert nodata to -9999
+    Litter_in[np.isnan(Litter_in)]=-9999.
+    Litter_std_in[np.isnan(Litter_std_in)]=-9999.
+    Croot_in[np.isnan(Croot_in)]=-9999.
+    Cwood_in[np.isnan(Cwood_in)]=-9999.
+    Csoil_in[np.isnan(Csoil_in)]=-9999.
     
-    
+    mx2t_in[np.isnan(mx2t_in)]=-9999.
+    mn2t_in[np.isnan(mn2t_in)]=-9999.
+    ssrd_in[np.isnan(ssrd_in)]=-9999.
+    vpd_in[np.isnan(vpd_in)]=-9999.
+    pptn_in[np.isnan(pptn_in)]=-9999.
+
+
     # write output to file
     outfile_drivers = "CARDAMOM_met_drivers_"+plot[pp]+".csv"
     out_drivers = open(outfile_drivers,'w')
