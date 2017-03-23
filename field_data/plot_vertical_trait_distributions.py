@@ -277,7 +277,7 @@ ax6.set_ylabel('Height / m')
 ax6.set_xlabel('C:N ratio')
 
 plt.tight_layout()
-
+plt.savefig('vertical_trait_distributions.png')
 
 # Figure 2 - N control on photosynthetic rates and respiration rates
 plt.figure(2, facecolor='White',figsize=[9,3])
@@ -399,4 +399,5 @@ ax3.set_xlabel('%N')
 ax3.set_ylabel('$V_{cmax}/R_d$')
 
 plt.tight_layout()
+plt.savefig('leaf_N_and_photosynthetic_rates.png')
 plt.show()
