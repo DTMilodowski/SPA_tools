@@ -117,7 +117,7 @@ out_priors = open(outfile_priors,'w')
 out_drivers.write('timestep_days, date, mn2t, mx2t, vpd, ssrd, pptn, LAI\n')
 out_priors.write('Cwood, Croot, LitterFlux, LitterFluxStd\n')
 for i in range(0,N_t):
-    out_drivers.write(str(tt) + ',' + str(date[tt]) + ', ' + str(mn2t_in[tt]) + ',' + str(mx2t_in[tt]) + ',' + str(vpd_in[tt]) + ',' + str(ssrd[tt]) + ',' + str(pptn[tt]) + LAI]  + '\n')
+    out_drivers.write(str(tt) + ',' + str(date[tt]) + ', ' + str(mn2t_in[tt]) + ',' + str(mx2t_in[tt]) + ',' + str(vpd_in[tt]) + ',' + str(ssrd[tt]) + ',' + str(pptn[tt]) + str(LAI)  + '\n')
     out_priors.write(str(tt) + ',' + str(date[tt]) + ', ' + str(Cwood_in[tt]) + ',' + str(Croot_in[tt]) + ',' + str(Litter_in[tt]) + ',' + str(Litter_std_in[tt]) + '\n')
 out_drivers.close()
 out_priors.close()
