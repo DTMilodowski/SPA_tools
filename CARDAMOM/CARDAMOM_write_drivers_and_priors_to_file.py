@@ -43,7 +43,9 @@ litter_file = '/home/dmilodow/DataStore_DTM/BALI/BALI_Cplot_data/SAFE_CarbonPlot
 # Now get some basic parameters for the run
 start_date= '01/01/2011'
 end_date= '01/03/2016'
-plot = 'Belian'
+plot = ['Belian','LF','B North']
+LAI = [6.69,4.78,3.0]
+Csoil = [0.0082857,0.11791,0.003934]
 
 # Initiate some arrays to host time series
 d,m,y = start_date.split('/')
@@ -53,19 +55,11 @@ end = np.datetime64(y+'-'+m+'-'+d,'D')
 date = np.arange(start,end, dtype = 'datetime64[D]')
 
 N_t = date.size
-mn2t_in = np.zeros(N_t)*-9999.
-mx2t_in = np.zeros(N_t)*-9999.
-vpd_in = np.zeros(N_t)*-9999.
-ssrd_in = np.zeros(N_t)*-9999.
-pptn_in = np.zeros(N_t)*-9999.
-
-Cwood_in = np.zeros(N_t)*-9999.
-Croot_in = np.zeros(N_t)*-9999.
-Litter_in = np.zeros(N_t)*-9999.
-Litter_std_in = np.zeros(N_t)*-9999.
-
-LAI_in = np.zeros(N_t)*-9999.
-LAI_std_in = np.zeros(N_t)*-9999.
+mn2t_in = np.zeros(N_t)-9999.
+mx2t_in = np.zeros(N_t)-9999.
+vpd_in = np.zeros(N_t)-9999.
+ssrd_in = np.zeros(N_t)-9999.
+pptn_in = np.zeros(N_t)-9999.
 
 #---------------------------------------------------------------------------------------------------------------
 # Process met data
@@ -84,41 +78,53 @@ for dd in range(0,N_trmm):
     pptn_in[date == TRMM_dates[dd]] = pptn[dd]
 #---------------------------------------------------------------------------------------------------------------
 # Process field data
-census_date, Cwood = field.get_Cwood_ts(census_file,plot)
-N_c = Cwood.size
-for dd in range(0,N_c):
-    Cwood_in[date == census_date[dd]] = Cwood[dd]
 
-root_stock_date, Croot, Croot_std = field.get_Croot_ts(roots_file,plot)
-N_r = Croot.size
-for dd in range(0,N_r):
-    Croot_in[date == root_stock_date[dd]] = Croot[dd]
+for pp in range(0,len(plot)):
+    Cwood_in = np.zeros(N_t)-9999.
+    Croot_in = np.zeros(N_t)-9999.
+    Csoil_in = np.zeros(N_t)-9999.
+    Litter_in = np.zeros(N_t)-9999.
+    Litter_std_in = np.zeros(N_t)-9999.
+
+    #LAI_in = np.zeros(N_t)-9999.
+    #LAI_std_in = np.zeros(N_t)-9999.
+    Csoil_in[0] = Csoil[pp]
+    
+    census_date, Cwood = field.get_Cwood_ts(census_file,plot[pp])
+    N_c = Cwood.size
+    for dd in range(0,N_c):
+        Cwood_in[date == census_date[dd]] = Cwood[dd]
+
+    root_stock_date, Croot, Croot_std = field.get_Croot_ts(roots_file,plot[pp])
+    N_r = Croot.size
+    for dd in range(0,N_r):
+        Croot_in[date == root_stock_date[dd]] = Croot[dd]
 
 
-litter_collection_date, litter_previous_collection_date, litter_flux, litter_std = field.get_litterfall_ts(litter_file,plot)
+    litter_collection_date, litter_previous_collection_date, litter_flux, litter_std = field.get_litterfall_ts(litter_file,plot[pp])
 
-# Initially assume average flux rates for litter between collection dates 
-N_lit=litter_flux.size
-
-for tt in range(0,N_lit):
-    indices = np.all((date>=litter_previous_collection_date[tt], date<litter_collection_date[tt]),axis=0)
-    n_days = np.float((litter_collection_date[tt]-litter_previous_collection_date[tt])/ np.timedelta64(1, 'D'))
-    Litter_in[indices]= litter_flux[tt]/n_days
-    Litter_std_in[indices]= litter_std[tt]/n_days
+    # Initially assume average flux rates for litter between collection dates 
+    N_lit=litter_flux.size
+    
+    for tt in range(0,N_lit):
+        indices = np.all((date>=litter_previous_collection_date[tt], date<litter_collection_date[tt]),axis=0)
+        n_days = np.float((litter_collection_date[tt]-litter_previous_collection_date[tt])/ np.timedelta64(1, 'D'))
+        Litter_in[indices]= litter_flux[tt]/n_days
+        Litter_std_in[indices]= litter_std[tt]/n_days
     
     
-# write output to file
-outfile_drivers = "CARDAMOM_met_drivers.csv"
-out_drivers = open(outfile_drivers,'w')
+    # write output to file
+    outfile_drivers = "CARDAMOM_met_drivers_"+plot[pp]+".csv"
+    out_drivers = open(outfile_drivers,'w')
 
-outfile_priors = "CARDAMOM_param_priors.csv"
-out_priors = open(outfile_priors,'w')
+    outfile_priors = "CARDAMOM_param_priors_"+plot[pp]+".csv"
+    out_priors = open(outfile_priors,'w')
 
-out_drivers.write('timestep_days, date, mn2t, mx2t, vpd, ssrd, pptn, LAI\n')
-out_priors.write('Cwood, Croot, LitterFlux, LitterFluxStd\n')
-for tt in range(0,N_t):
-    out_drivers.write(str(tt) + ',' + str(date[tt]) + ', ' + str(mn2t_in[tt]) + ',' + str(mx2t_in[tt]) + ',' + str(vpd_in[tt]) + ',' + str(ssrd[tt]) + ',' + str(pptn[tt]) + str(LAI)  + '\n')
-    out_priors.write(str(tt) + ',' + str(date[tt]) + ', ' + str(Cwood_in[tt]) + ',' + str(Croot_in[tt]) + ',' + str(Litter_in[tt]) + ',' + str(Litter_std_in[tt]) + '\n')
-out_drivers.close()
-out_priors.close()
+    out_drivers.write('timestep_days, date, mn2t, mx2t, vpd, ssrd, pptn, LAI\n')
+    out_priors.write('Cwood, Croot, Csoil, LitterFlux, LitterFluxStd\n')
+    for tt in range(0,N_t):
+        out_drivers.write(str(tt) + ',' + str(date[tt]) + ', ' + str(mn2t_in[tt]) + ',' + str(mx2t_in[tt]) + ',' + str(vpd_in[tt]) + ',' + str(ssrd[tt]) + ',' + str(pptn[tt]) + str(LAI[pp])  + '\n')
+        out_priors.write(str(tt) + ',' + str(date[tt]) + ', ' + str(Cwood_in[tt]) + ',' + str(Croot_in[tt]) + ',' + str(Csoil_in[tt]) + ',' + str(Litter_in[tt]) + ',' + str(Litter_std_in[tt]) + '\n')
+    out_drivers.close()
+    out_priors.close()
 
