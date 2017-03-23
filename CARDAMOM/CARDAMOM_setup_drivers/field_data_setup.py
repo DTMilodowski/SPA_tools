@@ -1,7 +1,7 @@
 #This set of functions prepares field data from GEM plots ready for assimilation into CARDAMOM
 import numpy as np
 import sys
-sys.path.append('../../field_data/')
+sys.path.append('../field_data/')
 
 import load_field_data as field
 
