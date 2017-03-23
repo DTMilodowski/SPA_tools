@@ -8,9 +8,9 @@ import load_field_data as field
 
 # Get time series of woody biomass
 def get_Cwood_ts(census_file,plot):
-    
+    print 'getting census data'
     census = field.collate_plot_level_census_data(census_file)
-    
+    print 'doing some calculations'
     plot_biomass = np.sum(census[plot]['C_wood'],axis=0)
     collection_date = np.max(census[plot]['CensusDate'],axis=0)
 
@@ -69,7 +69,10 @@ def get_litterfall_ts(litter_file,plot):
         
         # avoid nodata for missing/destroyed traps
         jj = np.isfinite(litter[plot]['rTotal'][:,i])
-        litter_fall.append(np.mean(litter[plot]['rTotal'][jj,i]))
-        litter_std.append(np.std(litter[plot]['rTotal'][jj,i]))
-        
+        if jj.sum()>0:
+            litter_fall.append(np.mean(litter[plot]['rTotal'][jj,i]))
+            litter_std.append(np.std(litter[plot]['rTotal'][jj,i]))
+        else:
+            litter_fall.append(np.nan)
+            litter_std.append(np.nan)
     return np.asarray(collection_dates), np.asarray(previous_collection_dates), np.asarray(litter_fall), np.asarray(litter_std)
