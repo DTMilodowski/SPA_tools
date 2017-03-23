@@ -975,7 +975,7 @@ def collate_tree_level_data(census_file,traits_file,branch_file,leaf_file):
 def collate_plot_level_census_data(census_file):
 
     BALI_plot, Subplot, CensusDates, TreeTag_census, AltTag, DPOM, HPOM, Height, C_stem, C_coarse_root, RAINFOR_flag, Alive_flag, Species, SubplotCoords, WoodDensity = read_ICP_census_data(census_file)
-    
+
     plot_names = np.unique(BALI_plot)
     N_plots = plot_names.size
     
@@ -996,13 +996,25 @@ def collate_plot_level_census_data(census_file):
             for y in range(0,3):
                 datetemp = CensusDates[subplot_indices,y]
                 dates[s,y]= np.max(datetemp)
-                #rint datetemp, dates[s,y]
+
                 Cstemtemp = C_stem[subplot_indices,y]
-                Cstem[s,y]= np.sum(Cstemtemp[np.isfinite(Cstemtemp)])
+                if np.isfinite(Cstemtemp).sum()>0:
+                    Cstem[s,y]= np.sum(Cstemtemp[np.isfinite(Cstemtemp)])
+                else:
+                    Cstem[s,y]=np.nan
+
                 Croottemp = C_coarse_root[subplot_indices,y]
-                Croot[s,y]= np.sum(Croottemp[np.isfinite(Croottemp)])               
+                if np.isfinite(Croottemp).sum()>0:
+                    Croot[s,y]= np.sum(Croottemp[np.isfinite(Croottemp)])  
+                else:
+                    Croot[s,y]= np.nan
+
                 httemp = Height[subplot_indices,y]
-                CanHt[s,y]= np.mean(httemp[np.isfinite(httemp)])   
+                if np.isfinite(httemp).sum()>0:
+                    CanHt[s,y]= np.mean(httemp[np.isfinite(httemp)])   
+                else:
+                    CanHt[s,y]=np.nan
+
         PlotDict = {}
         PlotDict['n_subplots']=n_subplots
         PlotDict['CanopyHeight']=CanHt
