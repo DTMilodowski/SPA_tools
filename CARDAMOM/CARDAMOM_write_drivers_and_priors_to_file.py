@@ -3,6 +3,7 @@
 # 2) Root stocks - from GEM plots
 # 3) Litter traps - from GEM plots
 # 4) LAI estimates - from  MODIS time series
+# 5) Soil carbon - from pits in GEM plots.
 
 # Currently litter fluxes included as mean fluxes between collection points.  This will be changed in the
 # future to account for cumulative fluxes between dates.
@@ -107,3 +108,17 @@ for tt in range(0,N_lit):
     
     
 # write output to file
+outfile_drivers = "CARDAMOM_met_drivers.csv"
+out_drivers = open(outfile_drivers,'w')
+
+outfile_priors = "CARDAMOM_param_priors.csv"
+out_priors = open(outfile_priors,'w')
+
+out_drivers.write('timestep_days, date, mn2t, mx2t, vpd, ssrd, pptn, LAI\n')
+out_priors.write('Cwood, Croot, LitterFlux, LitterFluxStd\n')
+for i in range(0,N_t):
+    out_drivers.write(str(tt) + ',' + str(date[tt]) + ', ' + str(mn2t_in[tt]) + ',' + str(mx2t_in[tt]) + ',' + str(vpd_in[tt]) + ',' + str(ssrd[tt]) + ',' + str(pptn[tt]) + LAI]  + '\n')
+    out_priors.write(str(tt) + ',' + str(date[tt]) + ', ' + str(Cwood_in[tt]) + ',' + str(Croot_in[tt]) + ',' + str(Litter_in[tt]) + ',' + str(Litter_std_in[tt]) + '\n')
+out_drivers.close()
+out_priors.close()
+
