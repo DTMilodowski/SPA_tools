@@ -94,12 +94,12 @@ for pp in range(0,len(plot)):
     census_date, Cwood = field.get_Cwood_ts(census_file,plot[pp])
     N_c = Cwood.size
     for dd in range(0,N_c):
-        Cwood_in[date == census_date[dd]] = Cwood[dd]/100**2/1000. # convert kg/ha to g/m^3
+        Cwood_in[date == census_date[dd]] = Cwood[dd] *1000./10.**4. # convert kg/ha to g/m^3
     root_stock_date, Croot, Croot_std = field.get_Croot_ts(roots_file,plot[pp])
 
     N_r = Croot.size
     for dd in range(0,N_r):
-        Croot_in[date == root_stock_date[dd]] = Croot[dd]/100**2/1000. # convert kg/ha to g/m^3
+        Croot_in[date == root_stock_date[dd]] = Croot[dd]*10**6/10.**4 # convert Mg/ha to g/m^3
     
     litter_collection_date, litter_previous_collection_date, litter_flux, litter_std = field.get_litterfall_ts(litter_file,plot[pp])
 
@@ -108,8 +108,8 @@ for pp in range(0,len(plot)):
     for tt in range(0,N_lit):
         indices = np.all((date>=litter_previous_collection_date[tt], date<litter_collection_date[tt]),axis=0)
         n_days = np.float((litter_collection_date[tt]-litter_previous_collection_date[tt])/ np.timedelta64(1, 'D'))
-        Litter_in[indices]= litter_flux[tt]/n_days/100**2/1000. # convert kg/ha to g/m^3
-        Litter_std_in[indices]= litter_std[tt]/n_days/100**2/1000. # convert kg/ha to g/m^3
+        Litter_in[indices]= litter_flux[tt]/n_days * (10.**6/10.**4/365.25.) # convert Mg/ha/yr-1 to g/m-2/d-1
+        Litter_std_in[indices]= litter_std[tt]/n_days * (10.**6/10.**4/365.25) # convert Mg/ha/yr-1 to g/m-2/d-1
 
     # Convert nodata to -9999
     Litter_in[np.isnan(Litter_in)]=-9999.

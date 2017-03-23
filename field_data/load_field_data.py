@@ -1025,6 +1025,8 @@ def collate_plot_level_census_data(census_file):
         CensusDict[plot_names[i]]=PlotDict
     return CensusDict
 
+
+# Read litterfall from GEM plot database file (converted to csv).  Mass collections (denoted with prefix m) are in g accumulated.  Otherwise given as flux in Mg C ha-1 yr-1
 def read_litterfall_data(litter_file):
    
     datatype = {'names': ('ForestType', 'Plot', 'CollectionDate', 'PreviousCollectionDate', 'AccumulationDays', 'Trap', 'TrapSize', 'mLeaves', 'mTwigs', 'mFruit', 'mFlowers', 'mSeeds', 'mMisc','Comments','Leaves', 'Twigs', 'Fruit', 'Flowers', 'Seeds', 'Misc', 'Reproductive','Total'), 'formats': ('S16','S16','S10','S10','f16','i8','f16','f16','f16','f16','f16','f16','f16','S64','f16','f16','f16','f16','f16','f16','f16','f16')}
