@@ -40,7 +40,7 @@ def generate_daily_met_drivers_ERAinterim_TRMM(ERA_file, TRMM_file, start_date, 
         # airT and rh both reported quarterly
         mn2t[dd]=np.min(airT_era[dd*iter_4:(dd+1)*iter_4])
         mx2t[dd]=np.max(airT_era[dd*iter_4:(dd+1)*iter_4])
-        vpd_era[dd] = np.mean(vpd_era[dd*iter_4:(dd+1)*iter_4])
+        vpd[dd] = np.mean(vpd_era[dd*iter_4:(dd+1)*iter_4])
 
         # sw rad reported as 12hr totals
         ssrd[dd]=np.sum(sw_era[dd*iter_2:(dd+1)*iter_2])
