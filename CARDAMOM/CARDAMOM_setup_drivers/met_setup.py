@@ -80,3 +80,15 @@ def generate_daily_met_drivers_ERAinterim_TRMM(ERA_file, TRMM_file, start_date, 
     TRMM_dates_out = TRMM_dates[TRMM_mask]
     pptn_out = TRMM_pptn[TRMM_mask]
     return dates_out,mn2t_out,mx2t_out,vpd_out,ssrd_out,TRMM_dates_out,pptn_out
+
+# rolling mean met data based on specified number of previous days (default 21). 
+# edge effects dealt with by assuming fixed boundaries
+def retro_looking_rolling_mean(array,window_width):
+    convolve_window = np.concatenate((np.zeros(window_width-1),np.ones(window_width)),axis=0)/float(window_width)
+    host = np.zeros(array.size+(window_width-1)*2)
+    host[window_width-1:window_width-1+array.size]=array.copy()
+    host[:window_width-1]=array[0]
+    host[-window_width+1:]=array[-1]
+    array_out = np.convolve(host,convolve_window,'valid')
+
+
