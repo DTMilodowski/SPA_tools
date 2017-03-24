@@ -45,7 +45,7 @@ start_date= '01/01/2011'
 end_date= '01/03/2016'
 plot = ['Belian','LF','B North']
 LAI = [6.69,4.78,3.0]
-Csoil = [0.0082857,0.11791,0.003934]
+Csoil = [8295.66.0082857,11275.18,3934.03]
 
 # Initiate some arrays to host time series
 d,m,y = start_date.split('/')
@@ -139,7 +139,7 @@ for pp in range(0,len(plot)):
     out_priors = open(outfile_priors,'w')
 
     out_drivers.write('timestep_days, date, mn2t, mx2t, vpd, ssrd, pptn, LAI\n')
-    out_priors.write('Cwood, Croot, Csoil, LitterFlux, LitterFluxStd\n')
+    out_priors.write('timestep_days, date, Cwood, Croot, Csoil, LitterFlux, LitterFluxStd\n')
     for tt in range(0,N_t):
         out_drivers.write(str(tt) + ',' + str(date[tt]) + ', ' + str(mn2t_in[tt]) + ',' + str(mx2t_in[tt]) + ',' + str(vpd_in[tt]) + ',' + str(ssrd[tt]) + ',' + str(pptn[tt]) + str(LAI[pp])  + '\n')
         out_priors.write(str(tt) + ',' + str(date[tt]) + ', ' + str(Cwood_in[tt]) + ',' + str(Croot_in[tt]) + ',' + str(Csoil_in[tt]) + ',' + str(Litter_in[tt]) + ',' + str(Litter_std_in[tt]) + '\n')
