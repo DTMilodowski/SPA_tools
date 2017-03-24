@@ -90,6 +90,7 @@ def retro_looking_rolling_mean(array,window_width):
     host[:window_width-1]=array[0]
     host[-window_width+1:]=array[-1]
     array_out = np.convolve(host,convolve_window,'valid')
+    return array_out
 
 
 # recast met data as 21 day moving averages
