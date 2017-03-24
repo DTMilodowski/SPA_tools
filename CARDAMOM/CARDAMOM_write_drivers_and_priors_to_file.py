@@ -45,7 +45,7 @@ start_date= '01/01/2011'
 end_date= '01/03/2016'
 plot = ['Belian','LF','B North']
 LAI = [6.69,4.78,3.0]
-Csoil = [8295.66.0082857,11275.18,3934.03]
+Csoil = [8295.66,11275.18,3934.03]
 
 # Initiate some arrays to host time series
 d,m,y = start_date.split('/')
