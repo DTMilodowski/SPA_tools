@@ -92,3 +92,11 @@ def retro_looking_rolling_mean(array,window_width):
     array_out = np.convolve(host,convolve_window,'valid')
 
 
+# recast met data as 21 day moving averages
+def retro_rolling_average_met_data(mn2t,mx2t,ssrd,vpd,pptn, t=21):
+    mn2t_out = retro_looking_rolling_mean(mn2t,t)
+    mx2t_out = retro_looking_rolling_mean(mx2t,t)
+    ssrd_out = retro_looking_rolling_mean(ssrd,t)
+    pptn_out = retro_looking_rolling_mean(pptn,t)
+    vpd_out = retro_looking_rolling_mean(vpd,t)
+    return mn2t_out,mx2t_out,ssrd_out, vpd_out, pptn_out
