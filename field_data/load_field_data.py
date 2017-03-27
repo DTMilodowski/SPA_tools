@@ -77,7 +77,7 @@ def load_photosynthesis_data(photo_file):
     tree_height = np.zeros(leaf_count)
     leaf_thickness = np.zeros(leaf_count)
     leaf_area = np.zeros(leaf_count)
-    SLA = np.zeros(leaf_count)
+    #SLA = np.zeros(leaf_count)
     shade_tag = np.zeros(leaf_count)
     branch_tag = []
     forest_type = []
@@ -260,9 +260,9 @@ def load_leaf_traits(leaf_file):
 
     leaf_thickness = leaf_data['leaf_thickness']
     leaf_area = leaf_data['leafA_mm2']
-    SLA = leaf_data['SLA']
+    SLA = leaf_data['SLA'] # SLA in mm^2/mg
     # Convert SLA to LMA
-    LMA = 1/SLA*1000
+    LMA = 1/(SLA*10**3*10**-2) #LMA in g/cm^2
 
     branch_ID = np.asarray(branch_tag)
     return forest_type, leaf_ID, branch_ID, shade_tag, leaf_thickness, leaf_area, SLA, LMA
