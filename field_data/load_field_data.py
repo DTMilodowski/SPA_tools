@@ -517,6 +517,7 @@ def collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_f
     branch_LeafThickness = np.zeros(N)*np.nan
     branch_ShadeTag = np.zeros(N)*np.nan
     branch_N = np.zeros(N)*np.nan
+    branch_Na = np.zeros(N)*np.nan
     branch_C = np.zeros(N)*np.nan
     branch_CNratio = np.zeros(N)*np.nan
     branch_LeafHeight = np.zeros(N)*np.nan
@@ -526,6 +527,7 @@ def collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_f
 
         br = unique_branches[i]
         ftype_flag = 0
+        leafdata_flag = 0
         # get branch info
         if np.sum(branch_ID==br)>0:
             branch_LeafHeight[i]=np.mean(branch_height[branch_ID==br])
@@ -542,6 +544,7 @@ def collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_f
             branch_LeafArea[i]=np.mean(leaf_area[branch_ID_leaf==br])
             branch_LeafThickness[i]=np.mean(leaf_thickness[branch_ID_leaf==br])
             branch_ShadeTag[i]=np.mean(shade_tag_leaf[branch_ID_leaf==br])
+            leafdata_flag = 1
             if ftype_flag==0:
                 branch_Ftype[i]=forest_type_leaf[branch_ID_leaf==br][0]
                 ftype_flag = 1
@@ -563,6 +566,8 @@ def collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_f
             if ftype_flag==0:
                 branch_Ftype[i]=forest_type_chem[branch_ID_chem==br][0]
                 ftype_flag = 1
+            if leafdata_flag == 1:
+                branch_Na[i] = branch_N[i]/100.*branch_LMA[i]
 
         if np.sum(branch_ID_spp==br)==1:
             branch_spp.append(spp[branch_ID_spp==br][0])
@@ -574,7 +579,7 @@ def collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_f
     species = np.asarray(branch_spp)
     ForestType = np.asarray(branch_Ftype)
 
-    return unique_branches, species, genus, branch_N, branch_C, branch_CNratio, branch_SLA, branch_LMA, branch_LeafArea, branch_LeafThickness, branch_LeafHeight, branch_VPD, branch_Rd, branch_Vcmax, branch_Jmax, branch_ShadeTag, ForestType
+    return unique_branches, species, genus, branch_N, branch_Na, branch_C, branch_CNratio, branch_SLA, branch_LMA, branch_LeafArea, branch_LeafThickness, branch_LeafHeight, branch_VPD, branch_Rd, branch_Vcmax, branch_Jmax, branch_ShadeTag, ForestType
 
 
 
