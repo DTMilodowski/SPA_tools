@@ -24,12 +24,14 @@ branch_file = '../../../BALI_traits_data/CombinedPlots/ParameterTrees_Combined_1
 leaf_file = '../../../BALI_traits_data/CombinedPlots/LeafArea_Combined_14122016.csv'
 
 # Load in the traits
-branch, spp, genus, N, C, CNratio, SLA, LMA, LeafArea, LeafThickness, LeafHeight, VPD, Rd, Vcmax, Jmax, ShadeTag, ftype = field.collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_file)
+branch, spp, genus, N, Narea, C, CNratio, SLA, LMA, LeafArea, LeafThickness, LeafHeight, VPD, Rd, Vcmax, Jmax, ShadeTag, ftype = field.collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_file)
 
 LeafThickness[LeafThickness>0.60]=np.nan
 Vcmax[Vcmax>150]=np.nan
-LMA[LMA>250]=np.nan
+LMA[LMA>0.025]=np.nan
 N[N>4]=np.nan
+Narea*=10**3
+Narea[Narea>0.4]=np.nan
 
 
 
@@ -121,13 +123,19 @@ ax2.set_xlabel('$R_d$')
 
 ax3 = plt.subplot2grid((2,3),(0,2),sharey=ax1)
 ax3.annotate('c', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
-ax3.plot(N[ftype=='OG'],LeafHeight[ftype=='OG'],'.',color='blue')
-ax3.plot(N[ftype=='SL'],LeafHeight[ftype=='SL'],'.',color='red')
+#ax3.plot(N[ftype=='OG'],LeafHeight[ftype=='OG'],'.',color='blue')
+#ax3.plot(N[ftype=='SL'],LeafHeight[ftype=='SL'],'.',color='red')
+ax3.plot(Narea[ftype=='OG'],LeafHeight[ftype=='OG'],'.',color='blue')
+ax3.plot(Narea[ftype=='SL'],LeafHeight[ftype=='SL'],'.',color='red')
 
-mask = ~np.isnan(N[ftype=='OG']) & ~np.isnan(LeafHeight[ftype=='OG'])
-m1, c1, r1, p1, err1 = stats.linregress(N[ftype=='OG'][mask],LeafHeight[ftype=='OG'][mask])
-mask = ~np.isnan(N[ftype=='SL']) & ~np.isnan(LeafHeight[ftype=='SL'])
-m2, c2, r2, p2, err2 = stats.linregress(N[ftype=='SL'][mask],LeafHeight[ftype=='SL'][mask])
+#mask = ~np.isnan(N[ftype=='OG']) & ~np.isnan(LeafHeight[ftype=='OG'])
+#m1, c1, r1, p1, err1 = stats.linregress(N[ftype=='OG'][mask],LeafHeight[ftype=='OG'][mask])
+#mask = ~np.isnan(N[ftype=='SL']) & ~np.isnan(LeafHeight[ftype=='SL'])
+#m2, c2, r2, p2, err2 = stats.linregress(N[ftype=='SL'][mask],LeafHeight[ftype=='SL'][mask])
+mask = ~np.isnan(Narea[ftype=='OG']) & ~np.isnan(LeafHeight[ftype=='OG'])
+m1, c1, r1, p1, err1 = stats.linregress(Narea[ftype=='OG'][mask],LeafHeight[ftype=='OG'][mask])
+mask = ~np.isnan(Narea[ftype=='SL']) & ~np.isnan(LeafHeight[ftype=='SL'])
+m2, c2, r2, p2, err2 = stats.linregress(Narea[ftype=='SL'][mask],LeafHeight[ftype=='SL'][mask])
 p1str=''
 if p1<0.001:
     p1str='***'
@@ -156,7 +164,9 @@ stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2
 ax3.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
 
 ax3.set_ylabel('Height / m')
-ax3.set_xlabel('%N')
+#ax3.set_xlabel('%N')
+ax3.set_xlabel('[N]$_{area}$ / mg(N)cm$^{-2}$')
+
 
 ax4 = plt.subplot2grid((2,3),(1,0),sharey=ax1)
 ax4.annotate('d', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
@@ -196,7 +206,7 @@ stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2
 ax4.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
 
 ax4.set_ylabel('Height / m')
-ax4.set_xlabel('LMA')
+ax4.set_xlabel('LMA / g cm$^{-2}$')
 
 ax5 = plt.subplot2grid((2,3),(1,1),sharey=ax1)
 ax5.annotate('e', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
@@ -400,4 +410,126 @@ ax3.set_ylabel('$V_{cmax}/R_d$')
 
 plt.tight_layout()
 plt.savefig('leaf_N_and_photosynthetic_rates.png')
+
+# Figure 3 - N/area control on photosynthetic rates and respiration rates
+plt.figure(3, facecolor='White',figsize=[9,3])
+
+ax1 = plt.subplot2grid((1,3),(0,0))
+ax1.annotate('a', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
+ax1.plot(Narea[ftype=='OG'],Vcmax[ftype=='OG'],'.',color='blue')
+ax1.plot(Narea[ftype=='SL'],Vcmax[ftype=='SL'],'.',color='red')
+
+mask = ~np.isnan(Narea[ftype=='OG']) & ~np.isnan(Vcmax[ftype=='OG'])
+m1, c1, r1, p1, err1 = stats.linregress(Narea[ftype=='OG'][mask],Vcmax[ftype=='OG'][mask])
+mask = ~np.isnan(Narea[ftype=='SL']) & ~np.isnan(Vcmax[ftype=='SL'])
+m2, c2, r2, p2, err2 = stats.linregress(Narea[ftype=='SL'][mask],Vcmax[ftype=='SL'][mask])
+p1str=''
+if p1<0.001:
+    p1str='***'
+elif p1<0.01:
+    p1str='** '
+elif p1<0.05:
+    p1str='*  '
+elif p1<0.1:
+    p1str='$^.$  '
+else:
+    p1str='   '
+
+p2str=''
+if p2<0.001:
+    p2str='***'
+elif p2<0.01:
+    p2str='** '
+elif p2<0.05:
+    p2str='*  '
+elif p2<0.1:
+    p2str='$^.$  '
+else:
+    p2str='   '
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str
+ax1.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
+
+ax1.set_xlabel('[N]$_{area}$ / mg(N)cm$^{-2}$')
+ax1.set_ylabel('$V_{cmax}$')
+
+ax2 = plt.subplot2grid((1,3),(0,1),sharex=ax1)
+ax2.annotate('b', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
+ax2.plot(Narea[ftype=='OG'],Rd[ftype=='OG'],'.',color='blue')
+ax2.plot(Narea[ftype=='SL'],Rd[ftype=='SL'],'.',color='red')
+mask = ~np.isnan(Narea[ftype=='OG']) & ~np.isnan(Rd[ftype=='OG'])
+m1, c1, r1, p1, err1 = stats.linregress(Narea[ftype=='OG'][mask],Rd[ftype=='OG'][mask])
+mask = ~np.isnan(Narea[ftype=='SL']) & ~np.isnan(Rd[ftype=='SL'])
+m2, c2, r2, p2, err2 = stats.linregress(Narea[ftype=='SL'][mask],Rd[ftype=='SL'][mask])
+p1str=''
+if p1<0.001:
+    p1str='***'
+elif p1<0.01:
+    p1str='** '
+elif p1<0.05:
+    p1str='*  '
+elif p1<0.1:
+    p1str='$^.$  '
+else:
+    p1str='   '
+
+p2str=''
+if p2<0.001:
+    p2str='***'
+elif p2<0.01:
+    p2str='** '
+elif p2<0.05:
+    p2str='*  '
+elif p2<0.1:
+    p2str='$^.$  '
+else:
+    p2str='   '
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str
+ax2.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
+
+ax2.set_xlabel('[N]$_{area}$ / mg(N)cm$^{-2}$')
+ax2.set_ylabel('$R_d$')
+
+ax3 = plt.subplot2grid((1,3),(0,2),sharex=ax1)
+ax3.annotate('c', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
+ax3.plot(Narea[ftype=='OG'],Vcmax[ftype=='OG']/Rd[ftype=='OG'],'.',color='blue')
+ax3.plot(Narea[ftype=='SL'],Vcmax[ftype=='SL']/Rd[ftype=='SL'],'.',color='red')
+
+mask = ~np.isnan(Narea[ftype=='OG']) & ~np.isnan(Vcmax[ftype=='OG']/Rd[ftype=='OG'])
+m1, c1, r1, p1, err1 = stats.linregress(Narea[ftype=='OG'][mask],(Vcmax[ftype=='OG']/Rd[ftype=='OG'])[mask])
+mask = ~np.isnan(Narea[ftype=='SL']) & ~np.isnan(Vcmax[ftype=='SL']/Rd[ftype=='SL'])
+m2, c2, r2, p2, err2 = stats.linregress(Narea[ftype=='SL'][mask],(Vcmax[ftype=='SL']/Rd[ftype=='SL'])[mask])
+p1str=''
+if p1<0.001:
+    p1str='***'
+elif p1<0.01:
+    p1str='** '
+elif p1<0.05:
+    p1str='*  '
+elif p1<0.1:
+    p1str='$^.$  '
+else:
+    p1str='   '
+
+p2str=''
+if p2<0.001:
+    p2str='***'
+elif p2<0.01:
+    p2str='** '
+elif p2<0.05:
+    p2str='*  '
+elif p2<0.1:
+    p2str='$^.$  '
+else:
+    p2str='   '
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str
+ax3.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
+
+ax3.set_xlabel('[N]$_{area}$ / mg(N)cm$^{-2}$')
+ax3.set_ylabel('$V_{cmax}/R_d$')
+
+plt.tight_layout()
+plt.savefig('leaf_Narea_and_photosynthetic_rates.png')
 plt.show()
