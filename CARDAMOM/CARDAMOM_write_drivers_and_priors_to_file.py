@@ -131,9 +131,11 @@ for pp in range(0,len(plot)):
     for tt in range(0,N_lit):
         indices = np.all((date>=litter_previous_collection_date[tt], date<litter_collection_date[tt]),axis=0)
         n_days = np.float((litter_collection_date[tt]-litter_previous_collection_date[tt])/ np.timedelta64(1, 'D'))
-        Litter_in[indices]= litter_flux[tt]/n_days * (10.**6/10.**4/365.25) # convert Mg/ha/yr to g/m2/d
-        Litter_std_in[indices]= litter_std[tt]/n_days * (10.**6/10.**4/365.25) # convert Mg/ha/yr to g/m2/d
-
+        #Litter_in[indices]= litter_flux[tt]/n_days * (10.**6/10.**4/365.25) # convert Mg/ha/yr to g/m2/d
+        #Litter_std_in[indices]= litter_std[tt]/n_days * (10.**6/10.**4/365.25) # convert Mg/ha/yr to g/m2/d
+        Litter_in[indices]= litter_flux[tt] * (10.**6/10.**4/365.25) # convert Mg/ha/yr to g/m2/d
+        Litter_std_in[indices]= litter_std[tt] * (10.**6/10.**4/365.25) # convert Mg/ha/yr to g/m2/d
+        
     # Convert nodata to -9999
     Litter_in[np.isnan(Litter_in)]=-9999.
     Litter_std_in[np.isnan(Litter_std_in)]=-9999.
