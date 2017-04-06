@@ -9,6 +9,7 @@ sys.path.append("/home/dmilodow/DataStore_DTM/BALI/MetDataProcessing/gapfilling/
 
 import weather_generator_BALI as wg
 import TRMM_processing as TRMM
+from metdata_processing import *
 
 # generate daily met drivers from ERA-Interim and TRMM
 # currently do not use shift in time zone, so min, max
@@ -80,6 +81,47 @@ def generate_daily_met_drivers_ERAinterim_TRMM(ERA_file, TRMM_file, start_date, 
     TRMM_dates_out = TRMM_dates[TRMM_mask]
     pptn_out = TRMM_pptn[TRMM_mask]
     return dates_out,mn2t_out,mx2t_out,vpd_out,ssrd_out,TRMM_dates_out,pptn_out
+
+# generate daily drivers from local met station
+def generate_daily_met_drivers_local_station(met_file):
+    met_dates, met_data = read_atm_metfile(met_file)
+    earliest_day = np.min(met_dates)
+    latest_day = np.max(met_dates)
+    dates_series, met_data_host = convert_atm_metdata_to_timeseries(met_dates,met_data,earliest_day,latest_day)
+    time_diff = 8
+    dates_series = dates_series - np.timedelta64(time_diff, 'h')
+
+    # clip time series so that ends are trimmed to full days
+    start_fullday=dates_series[0].astype('datetime64[D]')
+    if dates_series[0]- dates_series[0].astype('datetime64[D]').astype('datetime64[m]') != np.timedelta64(0,'m'):
+        start_fullday+=np.timedelta64(1,'D')
+    
+    end_fullday = dates_series[-1].astype('datetime64[D]')+np.timedelta64(1,'D')
+    if dates_series[-1]- dates_series[-1].astype('datetime64[D]').astype('datetime64[m]') != np.timedelta64(23*60+30,'m'):
+        end_fullday -= np.timedelta64(1,'D')
+
+    mask = np.all((dates_series>=start_fullday.astype('datetime64[m]'),dates_series<end_fullday.astype('datetime64[m]')),axis=0)
+    met_data_refined = met_data_host[mask,:]
+
+    met_days = np.arange(start_fullday,end_fullday,dtype='datetime64[D]')
+    n_days=met_days.size
+
+    daily_met_data = {}
+    daily_met_data['date'] = met_days
+    # temperature - get minimum and maximum temperatures
+    daily_met_data['minT'] = np.min(met_data_refined[:,0].reshape(48,n_days),axis=1)
+    daily_met_data['maxT'] = np.max(met_data_refined[:,0].reshape(48,n_days),axis=1)
+    # precipitation - get total daily precipitation
+    daily_met_data['pptn'] = np.sum(met_data_refined[:,1].reshape(48,n_days),axis=1)
+    # radiation - get total daily radiation
+    daily_met_data['ssrd'] = np.sum(met_data_refined[:,4].reshape(48,n_days),axis=1)
+    # vpd - get average vpd out
+    daily_met_data['vpd'] = np.mean(met_data_refined[:,2].reshape(48,n_days),axis=1)
+
+        
+    return daily_met_data
+ 
+
 
 # rolling mean met data based on specified number of previous days (default 21). 
 # edge effects dealt with by assuming fixed boundaries
