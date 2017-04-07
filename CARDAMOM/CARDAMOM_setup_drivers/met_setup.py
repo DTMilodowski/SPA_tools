@@ -88,6 +88,8 @@ def generate_daily_met_drivers_local_station(met_file):
     earliest_day = np.min(met_dates)
     latest_day = np.max(met_dates)
     dates_series, met_data_host = convert_atm_metdata_to_timeseries(met_dates,met_data,earliest_day,latest_day)
+    met_data_host[:,4]=met_data_host[:,4]*60.*30. # convert half hourly average Wm^-2 to cumulative Jm^-2 
+
     time_diff = 8
     dates_series = dates_series - np.timedelta64(time_diff, 'h')
 
