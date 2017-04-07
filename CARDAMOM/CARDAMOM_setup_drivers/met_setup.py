@@ -109,14 +109,14 @@ def generate_daily_met_drivers_local_station(met_file):
     daily_met_data = {}
     daily_met_data['date'] = met_days
     # temperature - get minimum and maximum temperatures
-    daily_met_data['minT'] = np.min(met_data_refined[:,0].reshape(48,n_days),axis=1)
-    daily_met_data['maxT'] = np.max(met_data_refined[:,0].reshape(48,n_days),axis=1)
+    daily_met_data['minT'] = np.min(met_data_refined[:,0].reshape(n_days,48),axis=1)
+    daily_met_data['maxT'] = np.max(met_data_refined[:,0].reshape(n_days,48),axis=1)
     # precipitation - get total daily precipitation
-    daily_met_data['pptn'] = np.sum(met_data_refined[:,1].reshape(48,n_days),axis=1)
+    daily_met_data['pptn'] = np.sum(met_data_refined[:,1].reshape(n_days,48),axis=1)
     # radiation - get total daily radiation
-    daily_met_data['ssrd'] = np.sum(met_data_refined[:,4].reshape(48,n_days),axis=1)
+    daily_met_data['ssrd'] = np.sum(met_data_refined[:,4].reshape(n_days,48),axis=1)
     # vpd - get average vpd out
-    daily_met_data['vpd'] = np.mean(met_data_refined[:,2].reshape(48,n_days),axis=1)
+    daily_met_data['vpd'] = np.mean(met_data_refined[:,2].reshape(n_days,48),axis=1)
 
         
     return daily_met_data
