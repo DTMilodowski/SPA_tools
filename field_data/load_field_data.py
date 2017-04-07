@@ -262,7 +262,10 @@ def load_leaf_traits(leaf_file):
     leaf_area = leaf_data['leafA_mm2']
     SLA = leaf_data['SLA'] # SLA in mm^2/mg
     # Convert SLA to LMA
-    LMA = 1/(SLA*10**3*10**-2) #LMA in g/cm^2
+#    LMA = 1/(SLA*10**3*10**-2) #LMA in g/cm^2
+    ###Check!!!
+
+    LMA = (1./SLA)*10.**3 #LMA in g/m^2
 
     branch_ID = np.asarray(branch_tag)
     return forest_type, leaf_ID, branch_ID, shade_tag, leaf_thickness, leaf_area, SLA, LMA
@@ -1030,7 +1033,6 @@ def collate_plot_level_census_data(census_file):
                     BasalArea[s,y]= np.pi*np.sum((DBHtemp[np.isfinite(DBHtemp)]/2)**2)   
                 else:
                     BasalArea[s,y]=np.nan
-TreeDict['C_wood'][:,1:]-TreeDict['C_wood'][:,:-1]
 
         # now lets do the growth, mortality and recruitment
         for s in range(0,n_subplots):
