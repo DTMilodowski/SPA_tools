@@ -52,7 +52,7 @@ d,m,y = start_date.split('/')
 start = np.datetime64(y+'-'+m+'-'+d,'D')
 d,m,y = end_date.split('/')
 end = np.datetime64(y+'-'+m+'-'+d,'D')
-date = np.arange(start,end, dtype = 'datetime64[D]')
+date = np.arange(start,end+np.timedelta64(1,'D'), dtype = 'datetime64[D]')
 
 N_t = date.size
 mn2t_in = np.zeros(N_t)-9999.
