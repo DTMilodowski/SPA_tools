@@ -17,23 +17,24 @@ axis_size = rcParams['font.size']+2
 
 
 
-chem_file = '../../../BALI_traits_data/CombinedPlots/BALI_traits_CN_02122016.csv'
-spp_file = '../../../BALI_traits_data/CombinedPlots/BALI_species_02122016.csv'
-photo_file = '../../../BALI_traits_data/CombinedPlots/Photosynthesis_Combined_14122016.csv'
+chem_file = '../../../BALI_traits_data/CombinedPlots/BALI_traits_CN_29032017.csv'
+spp_file = '../../../BALI_traits_data/CombinedPlots/BALI_species_28022017.csv'
+photo_file = '../../../BALI_traits_data/CombinedPlots/Photosynthesis_Combined_14122016_hyphens.csv'
 branch_file = '../../../BALI_traits_data/CombinedPlots/ParameterTrees_Combined_14122016.csv'
 leaf_file = '../../../BALI_traits_data/CombinedPlots/LeafArea_Combined_14122016.csv'
+census_file = '/home/dmilodow/DataStore_DTM/BALI/BALI_Cplot_data/SAFE_CarbonPlots_TreeCensus.csv'
 
 # Load in the traits
 branch, spp, genus, N, Narea, C, CNratio, SLA, LMA, LeafArea, LeafThickness, LeafHeight, VPD, Rd, Vcmax, Jmax, ShadeTag, ftype = field.collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_file)
 
 LeafThickness[LeafThickness>0.60]=np.nan
 Vcmax[Vcmax>150]=np.nan
-LMA[LMA>0.025]=np.nan
+#LMA[LMA>0.025]=np.nan
 N[N>4]=np.nan
-Narea*=10**3
-Narea[Narea>0.4]=np.nan
-
-
+#Narea*=10.**3
+Narea[Narea>4.0]=np.nan
+LMA_C = LMA*C/100. # convert to g(C) m^-2
+LMA_C[LMA_C>100.]=np.nan
 
 # Create figures
 # Figure 1 - vertical distribution of leaf traits:
@@ -165,18 +166,23 @@ ax3.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor
 
 ax3.set_ylabel('Height / m')
 #ax3.set_xlabel('%N')
-ax3.set_xlabel('[N]$_{area}$ / mg(N)cm$^{-2}$')
+ax3.set_xlabel('[N]$_{area}$ / g(N)m$^{-2}$')
 
 
 ax4 = plt.subplot2grid((2,3),(1,0),sharey=ax1)
 ax4.annotate('d', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
-ax4.plot(LMA[ftype=='OG'],LeafHeight[ftype=='OG'],'.',color='blue')
-ax4.plot(LMA[ftype=='SL'],LeafHeight[ftype=='SL'],'.',color='red')
-
-mask = ~np.isnan(LMA[ftype=='OG']) & ~np.isnan(LeafHeight[ftype=='OG'])
+ax4.plot(LMA_C[ftype=='OG'],LeafHeight[ftype=='OG'],'.',color='blue')
+ax4.plot(LMA_C[ftype=='SL'],LeafHeight[ftype=='SL'],'.',color='red')
+print "LMA(C)"
+mask = ~np.isnan(LMA_C[ftype=='OG']) & ~np.isnan(LeafHeight[ftype=='OG'])
+print "OG: ", np.mean(LMA_C[ftype=='OG'][mask]), " +/- ", np.std(LMA_C[ftype=='OG'][mask])
 m1, c1, r1, p1, err1 = stats.linregress(LMA[ftype=='OG'][mask],LeafHeight[ftype=='OG'][mask])
-mask = ~np.isnan(LMA[ftype=='SL']) & ~np.isnan(LeafHeight[ftype=='SL'])
+mask = ~np.isnan(LMA_C[ftype=='SL']) & ~np.isnan(LeafHeight[ftype=='SL'])
+print "SL: ", np.mean(LMA_C[ftype=='SL'][mask]), " +/- ", np.std(LMA_C[ftype=='SL'][mask])
 m2, c2, r2, p2, err2 = stats.linregress(LMA[ftype=='SL'][mask],LeafHeight[ftype=='SL'][mask])
+
+mask = ~np.isnan(LMA_C) & ~np.isnan(LeafHeight)
+print "all: ", np.mean(LMA_C[mask]), " +/- ", np.std(LMA_C[mask])
 
 p1str=''
 if p1<0.001:
@@ -206,7 +212,7 @@ stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2
 ax4.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
 
 ax4.set_ylabel('Height / m')
-ax4.set_xlabel('LMA / g cm$^{-2}$')
+ax4.set_xlabel('LMA(C) / g m$^{-2}$')
 
 ax5 = plt.subplot2grid((2,3),(1,1),sharey=ax1)
 ax5.annotate('e', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
@@ -450,7 +456,7 @@ else:
 stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str
 ax1.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
 
-ax1.set_xlabel('[N]$_{area}$ / mg(N)cm$^{-2}$')
+ax1.set_xlabel('[N]$_{area}$ / g(N)m$^{-2}$')
 ax1.set_ylabel('$V_{cmax}$')
 
 ax2 = plt.subplot2grid((1,3),(0,1),sharex=ax1)
@@ -488,7 +494,7 @@ else:
 stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str
 ax2.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
 
-ax2.set_xlabel('[N]$_{area}$ / mg(N)cm$^{-2}$')
+ax2.set_xlabel('[N]$_{area}$ / g(N)m$^{-2}$')
 ax2.set_ylabel('$R_d$')
 
 ax3 = plt.subplot2grid((1,3),(0,2),sharex=ax1)
@@ -527,9 +533,70 @@ else:
 stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str
 ax3.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
 
-ax3.set_xlabel('[N]$_{area}$ / mg(N)cm$^{-2}$')
+ax3.set_xlabel('[N]$_{area}$ / g(N)cm$^{-2}$')
 ax3.set_ylabel('$V_{cmax}/R_d$')
 
 plt.tight_layout()
 plt.savefig('leaf_Narea_and_photosynthetic_rates.png')
 plt.show()
+
+
+
+#=============================================
+# Loop through branches pulling out plot codes
+N_branches = branch.size
+plot_list = []
+tree_list = []
+for i in range(0,N_branches):
+    print branch[i]
+    plot_list.append(branch[i].split('-')[0])
+    if branch[i].split('-')[1][1]=='B': # find out why this tree labelled as such
+        tree_list.append(float(branch[i].split('-')[1][2:]))
+    else:
+        tree_list.append(float(branch[i].split('-')[1][1:]))
+
+# Now need to find subplot in which this tree is located
+plot = np.asarray(plot_list)
+tree = np.asarray(tree_list)
+plot[plot=='BEL']='Belian'
+plot[plot=='SER']='Seraya'
+plot[plot=='DAS1']='Danum1'
+plot[plot=='DAF2']='Danum2'    
+plot[plot=='ESA']='E'
+plot[plot=='BNO']='B North'
+plot[plot=='BSO']='B South'
+plot[plot=='SLF']='LF'
+
+census_plot, census_subplot, census_dates, tree_tag, alt_tag, DPOM, HPOM, TreeHeight, C_stem, C_coarse_root, RAINFOR, Alive_flag, census_spp, SubplotCoords, WoodDensity = field.read_ICP_census_data(census_file)
+
+#### Currently not indexing across into both plot and tree tag - need to do both as it seems that in census, tree tags non unique!
+
+subplot = np.zeros(N_branches)*np.nan
+
+plots = np.unique(plot)
+n_plots = plots.size
+
+
+for i in range(0,N_branches):
+    tree_index = np.all((census_plot==plot[i], tree_tag == tree[i]),axis=0)
+    if tree[i] in tree_tag:
+        print np.sum(tree_tag==tree[i])
+        print census_plot[tree_tag==tree[i]], tree[i]
+        print branch[tree==tree[i]]
+        subplot[i] = census_subplot[tree_tag==tree[i]]
+    elif tree[i] in alt_tag:
+        subplot[i] = census_subplot[tree_tag==tree[i]]
+    else:
+        print "can't find subplot information for tree ", tree[i]
+
+# write traits data to a csv file for ingestion into R
+#branch, spp, genus, N, Narea, C, CNratio, SLA, LMA, LeafArea, LeafThickness, LeafHeight, VPD, Rd, Vcmax, Jmax, ShadeTag, ftype
+out = open('BALI_leaf_traits.csv','w')
+out.write('plot,subplot,forest_type,branch,shade_tag,spp,genus,leaf_height,light_availability,leaf_thickness,leaf_area,LMA,C%,Carea,N%,Narea,Vcmax,Rd\n')
+
+    N_timesteps = MetData['Time'].size
+    tstep_days = tstep_mins/(60.*24.)
+    for i in range(0,N_branches):
+        out.write(str(t) + ',' + str(MetData['airT'][i]) + ', 0.2,' + str(MetData['swr'][i]) + ',' + str(MetData['vpd'][i]) + ',' + str(MetData['par'][i]) + ',' + str(MetData['pptn'][i]) + ',' + str(MetData['sp'][i]) + '\n')
+
+    out.close()
