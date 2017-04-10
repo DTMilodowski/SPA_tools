@@ -604,12 +604,11 @@ light_availability = np.zeros(N_branches)*np.nan
 #currently I has vertical resolution of 1 m.  Bin 0 -> 0-1 m.  Therefore take floor of leaf height to find index required
 for i in range(0,N_branches):
     if np.all((np.isfinite(LeafHeight[i]), np.isfinite(subplot[i]))):
-        ht_index = np.floor(LeafHeight[i])
-        light_availability[i]=I[plot[i]][subplot[i-1],ht_index]
+        ht_index = int(LeafHeight[i])
+        light_availability[i]=I[plot[i]][subplot[i]-1,ht_index]
     else:
         light_availability[i]=np.nan                               
         
-branch, spp, genus, N, Narea, C, CNratio, SLA, LMA, LeafArea, LeafThickness, LeafHeight, VPD, Rd, Vcmax, Jmax, ShadeTag, ftype
 
 # write traits data to a csv file for ingestion into R
 #plot,subplot,forest_type,branch,shade_tag,spp,genus,leaf_height,light_availability,leaf_thickness,leaf_area,LMA,C%,Carea,N%,Narea,Vcmax,Rd
