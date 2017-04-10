@@ -548,8 +548,25 @@ N_branches = branch.size
 plot_list = []
 tree_list = []
 for i in range(0,N_branches):
-    print branch[i]
-    plot_list.append(branch[i].split('-')[0])
+    plot_temp = branch[i].split('-')[0]
+    if plot_temp =='BEL':
+        plot_list.append('Belian')
+    elif plot_temp =='SER':
+        plot_list.append('Seraya')
+    elif plot_temp =='DAS1':
+        plot_list.append('DC1')
+    elif plot_temp =='DAF2':
+        plot_list.append('DC2')
+    elif plot_temp =='ESA':
+        plot_list.append('E')
+    elif plot_temp =='BNT':
+        plot_list.append('B North')
+    elif plot_temp =='BSO':
+        plot_list.append('B South')
+    elif plot_temp =='SLF':
+        plot_list.append('LF')
+    else:
+        print plot_temp
     if branch[i].split('-')[1][1]=='B': # find out why this tree labelled as such
         tree_list.append(float(branch[i].split('-')[1][2:]))
     else:
@@ -558,14 +575,6 @@ for i in range(0,N_branches):
 # Now need to find subplot in which this tree is located
 plot = np.asarray(plot_list)
 tree = np.asarray(tree_list)
-plot[plot=='BEL']='Belian'
-plot[plot=='SER']='Seraya'
-plot[plot=='DAS1']='Danum1'
-plot[plot=='DAF2']='Danum2'    
-plot[plot=='ESA']='E'
-plot[plot=='BNO']='B North'
-plot[plot=='BSO']='B South'
-plot[plot=='SLF']='LF'
 
 census_plot, census_subplot, census_dates, tree_tag, alt_tag, DPOM, HPOM, TreeHeight, C_stem, C_coarse_root, RAINFOR, Alive_flag, census_spp, SubplotCoords, WoodDensity = field.read_ICP_census_data(census_file)
 
@@ -574,27 +583,41 @@ census_plot, census_subplot, census_dates, tree_tag, alt_tag, DPOM, HPOM, TreeHe
 subplot = np.zeros(N_branches)*np.nan
 
 plots = np.unique(plot)
-n_plots = plots.size
-
-
 for i in range(0,N_branches):
-    tree_index = np.all((census_plot==plot[i], tree_tag == tree[i], alt_tag == tree[i]),axis=0)
+    tree_index = np.all((census_plot==plot[i], np.any((tree_tag == tree[i], alt_tag == tree[i]),axis=0)),axis=0)
     if tree_index.sum() == 1:
-        subplot[i] = census_subplot[tree_tag==tree[i]]
+        #print "found tree :-)"
+        subplot[i] = census_subplot[tree_index]
     elif tree_index.sum()==0:
         print "cannot find tree from traits record in the census data"
+        print "\t tree: ", tree[i], "; plot: ", plot[i]
         subplot[i] = np.nan
     else:
         print "we have a problem - more than one tree in this plot has the same tag "
+        subplot[i] = np.nan
+
+# load in light transmittance profiles
+light_file = '/exports/csce/datastore/geos/users/dmilodow/BALI/LiDAR/src/output/BALI_subplot_lighttransmittance.npz'
+I = np.load(light_file)
+
+light_availability = np.zeros(N_branches)*np.nan
+#currently I has vertical resolution of 1 m.  Bin 0 -> 0-1 m.  Therefore take floor of leaf height to find index required
+for i in range(0,N_branches):
+    if np.all((np.isfinite(LeafHeight[i]), np.isfinite(subplot[i]))):
+        ht_index = np.floor(LeafHeight[i])
+        light_availability[i]=I[plot[i]][subplot[i-1],ht_index]
+    else:
+        light_availability[i]=np.nan                               
+        
+branch, spp, genus, N, Narea, C, CNratio, SLA, LMA, LeafArea, LeafThickness, LeafHeight, VPD, Rd, Vcmax, Jmax, ShadeTag, ftype
 
 # write traits data to a csv file for ingestion into R
-#branch, spp, genus, N, Narea, C, CNratio, SLA, LMA, LeafArea, LeafThickness, LeafHeight, VPD, Rd, Vcmax, Jmax, ShadeTag, ftype
+#plot,subplot,forest_type,branch,shade_tag,spp,genus,leaf_height,light_availability,leaf_thickness,leaf_area,LMA,C%,Carea,N%,Narea,Vcmax,Rd
 out = open('BALI_leaf_traits.csv','w')
 out.write('plot,subplot,forest_type,branch,shade_tag,spp,genus,leaf_height,light_availability,leaf_thickness,leaf_area,LMA,C%,Carea,N%,Narea,Vcmax,Rd\n')
-
-    N_timesteps = MetData['Time'].size
-    tstep_days = tstep_mins/(60.*24.)
-    for i in range(0,N_branches):
-        out.write(str(t) + ',' + str(MetData['airT'][i]) + ', 0.2,' + str(MetData['swr'][i]) + ',' + str(MetData['vpd'][i]) + ',' + str(MetData['par'][i]) + ',' + str(MetData['pptn'][i]) + ',' + str(MetData['sp'][i]) + '\n')
+for i in range(0,N_branches):
+    out.write(plot[i] + ',' + str(subplot[i])  + ', ' + ftype[i] + ',' + branch[i]  + ',' + str(shade_tag[i])  + ',' + spp[i] + ',' + genus[i] + ',' + str(LeafHeight[i]) + ',' + str(light_availability[i]) + ',' +str( LeafThickness[i]) + ',' +str( LeafArea[i]) + ',' + str(LMA[i]) + ',' + str(C[i]) + str(LMA_C[i]) + ',' + str(N[i]) + ',' + str(Narea[i]) + ',' + str(Vcmax[i]) + ',' + str(Rd[i]) + '\n')
 
     out.close()
+
+
