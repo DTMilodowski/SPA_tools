@@ -578,16 +578,14 @@ n_plots = plots.size
 
 
 for i in range(0,N_branches):
-    tree_index = np.all((census_plot==plot[i], tree_tag == tree[i]),axis=0)
-    if tree[i] in tree_tag:
-        print np.sum(tree_tag==tree[i])
-        print census_plot[tree_tag==tree[i]], tree[i]
-        print branch[tree==tree[i]]
+    tree_index = np.all((census_plot==plot[i], tree_tag == tree[i], alt_tag == tree[i]),axis=0)
+    if tree_index.sum() == 1:
         subplot[i] = census_subplot[tree_tag==tree[i]]
-    elif tree[i] in alt_tag:
-        subplot[i] = census_subplot[tree_tag==tree[i]]
+    elif tree_index.sum()==0:
+        print "cannot find tree from traits record in the census data"
+        subplot[i] = np.nan
     else:
-        print "can't find subplot information for tree ", tree[i]
+        print "we have a problem - more than one tree in this plot has the same tag "
 
 # write traits data to a csv file for ingestion into R
 #branch, spp, genus, N, Narea, C, CNratio, SLA, LMA, LeafArea, LeafThickness, LeafHeight, VPD, Rd, Vcmax, Jmax, ShadeTag, ftype
