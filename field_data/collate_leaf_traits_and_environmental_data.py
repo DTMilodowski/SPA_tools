@@ -7,6 +7,7 @@ sys.path.append('/home/dmilodow/DataStore_DTM/BALI/MetDataProcessing/UtilityTool
 #import statistics_tools as stats2
 import load_field_data as field
 sys.path.append('/home/dmilodow/DataStore_DTM/BALI/LiDAR/src/')
+import LiDAR_tools as lidar
 import inventory_based_LAD_profiles as inventory
 import LiDAR_MacHorn_LAD_profiles as LAD
 import auxilliary_functions as aux
@@ -30,7 +31,7 @@ census_file = '/home/dmilodow/DataStore_DTM/BALI/BALI_Cplot_data/SAFE_CarbonPlot
 field_file = '/home/dmilodow/DataStore_DTM/BALI/LiDAR/Data/Local/SAFE_DANUM_carbonplots_FieldMapcensus2016.csv'
 light_file = '/exports/csce/datastore/geos/users/dmilodow/BALI/LiDAR/src/output/BALI_subplot_lighttransmittance.npz'
 subplot_coordinate_file = '/home/dmilodow/DataStore_DTM/BALI/LiDAR/src/BALI_subplot_coordinates_corrected.csv' #check
-las_file = ''
+las_file = '/home/dmilodow/DataStore_DTM/BALI/LiDAR/src/Carbon_plot_point_cloud_buffer.las'
 
 # get LiDAR data and sort into plots
 lidar_pts = lidar.load_lidar_data(las_file)
@@ -42,11 +43,12 @@ plot_origin = {}
 buffer_width = 5.
 for i in range(0,len(subplot_polygons.keys())):
     plot = subplot_polygons.keys()[i]
+    print plot
     plot_origin[plot] = subplot_polygons[plot][0,0,:]
 
     # clip LiDAR point cloud to plot level (this makes subsequent processing much faster)
-    n_coord_pairs = subplot_polygons[Plot_name].shape[0]*subplot_polygons[Plot_name].shape[1]
-    coord_pairs = subplot_polygons[Plot_name].reshape(n_coord_pairs,2)
+    n_coord_pairs = subplot_polygons[plot].shape[0]*subplot_polygons[plot].shape[1]
+    coord_pairs = subplot_polygons[plot].reshape(n_coord_pairs,2)
     bbox_polygon = aux.get_bounding_box_with_buffer(coord_pairs,buffer_width)
     plot_pts[plot] = lidar.filter_lidar_data_by_polygon(lidar_pts,bbox_polygon)
 
@@ -121,7 +123,7 @@ for i in range(0,N_branches):
     if tree_index_alt.sum() == 1:
         subplot[i] = field_data['subplot'][tree_index_alt]
         tree_xy = np.asarray([field_data['Xfield'][tree_index_alt]+ plot_origin[plot[i]][0],field_data['Yfield'][tree_index_alt]+ plot_origin[plot[i]][1]])
-        tree_pts = filter_lidar_data_by_polygon(plot_pts[plot[i]],tree_xy,radius)
+        tree_pts = filter_lidar_data_by_neighbourhood(plot_pts[plot[i]],tree_xy,radius)
         heights,first_return_profile,n_ground_returns = LAD1.bin_returns(tree_pts, max_height,layer_thickness)
         LAD_tree = LAD.estimate_LAD_MacArtherHorn(first_return_profile, n_ground_returns, layer_thickness, 1.)
         I_tree=clim.estimate_canopy_light_transmittance(LAD_tree,heights,k)
@@ -148,30 +150,16 @@ for i in range(0,N_branches):
         light_availability[i]=np.nan
     else:
         print "we have a problem - more than one tree in this plot has the same tag "
-        subplot[i] = np.nan
+        subplot[i] = np.nan         
+        light_availability[i]=np.nan
 
-
-
-
-
-# load in light transmittance profiles (subplot level, not tree centric)
-I = np.load(light_file)
-
-#currently I has vertical resolution of 1 m.  Bin 0 -> 0-1 m.  Therefore take floor of leaf height to find index required
-for i in range(0,N_branches):
-    if np.all((np.isfinite(LeafHeight[i]), np.isfinite(subplot[i]))):
-        ht_index = int(LeafHeight[i])
-        light_availability[i]=I[plot[i]][subplot[i]-1,ht_index]
-    else:
-        light_availability[i]=np.nan                               
-        
 
 # write traits data to a csv file for ingestion into R
 #plot,subplot,forest_type,branch,shade_tag,spp,genus,leaf_height,light_availability,leaf_thickness,leaf_area,LMA,C%,Carea,N%,Narea,Vcmax,Rd
 out = open('BALI_leaf_traits.csv','w')
 out.write('plot,subplot,forest_type,branch,shade_tag,spp,genus,leaf_height,light_availability,leaf_thickness,leaf_area,LMA,C%,Carea,N%,Narea,Vcmax,Rd\n')
 for i in range(0,N_branches):
-    out.write(plot[i] + ',' + str(subplot[i])  + ', ' + ftype[i] + ',' + branch[i]  + ',' + str(ShadeTag[i])  + ',' + spp[i] + ',' + spp[i].split(' ')[0] + ',' + str(LeafHeight[i]) + ',' + str(light_availability[i]) + ',' +str( LeafThickness[i]) + ',' +str( LeafArea[i]) + ',' + str(LMA[i]) + ',' + str(C[i]) + ',' + str(LMA_C[i]) + ',' + str(N[i]) + ',' + str(Narea[i]) + ',' + str(Vcmax[i]) + ',' + str(Rd[i]) + '\n')
+    out.write(plot[i] + ',' + str(subplot[i])  + ', ' + ftype[i] + ',' + branch[i]  + ',' + str(ShadeTag[i])  + ',' + spp[i] + ',' + spp[i].split(' ')[0] + ',' + str(LeafHeight[i]) + ',' + str(light_availability[i]) + + ',' + str(tree_centric[i]) + ',' +str( LeafThickness[i]) + ',' +str( LeafArea[i]) + ',' + str(LMA[i]) + ',' + str(C[i]) + ',' + str(LMA_C[i]) + ',' + str(N[i]) + ',' + str(Narea[i]) + ',' + str(Vcmax[i]) + ',' + str(Rd[i]) + '\n')
 
 out.close()
 
