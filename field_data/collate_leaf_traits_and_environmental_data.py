@@ -163,3 +163,307 @@ for i in range(0,N_branches):
 
 out.close()
 
+# Figure 4 - vertical distribution of leaf traits in terms of light availability rather than leaf height per se:
+# Vcmax, Rd, N,
+# LMA, Leaf Thickness, C:N ratio
+plt.figure(4, facecolor='White',figsize=[9,6])
+
+ax1 = plt.subplot2grid((2,3),(0,0))
+ax1.annotate('a', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
+
+mask = ~np.isnan(Vcmax[ftype=='OG']) & ~np.isnan(light_availability[ftype=='OG'])
+m1, c1, r1, p1, err1 = stats.linregress(Vcmax[ftype=='OG'][mask],light_availability[ftype=='OG'][mask])
+mask = ~np.isnan(Vcmax[ftype=='SL']) & ~np.isnan(light_availability[ftype=='SL'])
+m2, c2, r2, p2, err2 = stats.linregress(Vcmax[ftype=='SL'][mask],light_availability[ftype=='SL'][mask])
+
+ax1.plot(Vcmax[ftype=='OG'],light_availability[ftype=='OG'],'.',color='blue')
+ax1.plot(Vcmax[ftype=='SL'],light_availability[ftype=='SL'],'.',color='red')
+
+p1str=''
+if p1<0.001:
+    p1str='***'
+elif p1<0.01:
+    p1str='** '
+elif p1<0.05:
+    p1str='*  '
+elif p1<0.1:
+    p1str='$^.$  '
+else:
+    p1str='   '
+
+p2str=''
+if p2<0.001:
+    p2str='***'
+elif p2<0.01:
+    p2str='** '
+elif p2<0.05:
+    p2str='*  '
+elif p2<0.1:
+    p2str='$^.$  '
+else:
+    p2str='   '
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str
+ax1.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
+
+ax1.set_ylabel('Light availability')
+ax1.set_xlabel('$V_{cmax}$')
+
+ax2 = plt.subplot2grid((2,3),(0,1),sharey=ax1)
+ax2.annotate('b', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
+ax2.plot(Rd[ftype=='OG'],light_availability[ftype=='OG'],'.',color='blue')
+ax2.plot(Rd[ftype=='SL'],light_availability[ftype=='SL'],'.',color='red')
+
+mask = ~np.isnan(Rd[ftype=='OG']) & ~np.isnan(light_availability[ftype=='OG'])
+m1, c1, r1, p1, err1 = stats.linregress(Rd[ftype=='OG'][mask],light_availability[ftype=='OG'][mask])
+mask = ~np.isnan(Rd[ftype=='SL']) & ~np.isnan(light_availability[ftype=='SL'])
+m2, c2, r2, p2, err2 = stats.linregress(Rd[ftype=='SL'][mask],light_availability[ftype=='SL'][mask])
+p1str=''
+if p1<0.001:
+    p1str='***'
+elif p1<0.01:
+    p1str='** '
+elif p1<0.05:
+    p1str='*  '
+elif p1<0.1:
+    p1str='$^.$  '
+else:
+    p1str='   '
+
+p2str=''
+if p2<0.001:
+    p2str='***'
+elif p2<0.01:
+    p2str='** '
+elif p2<0.05:
+    p2str='*  '
+elif p2<0.1:
+    p2str='$^.$  '
+else:
+    p2str='   '
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str
+ax2.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
+
+ax2.set_ylabel('Light availability')
+ax2.set_xlabel('$R_d$')
+
+ax3 = plt.subplot2grid((2,3),(0,2),sharey=ax1)
+ax3.annotate('c', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
+#ax3.plot(N[ftype=='OG'],LeafHeight[ftype=='OG'],'.',color='blue')
+#ax3.plot(N[ftype=='SL'],LeafHeight[ftype=='SL'],'.',color='red')
+ax3.plot(Narea[ftype=='OG'],light_availability[ftype=='OG'],'.',color='blue')
+ax3.plot(Narea[ftype=='SL'],light_availability[ftype=='SL'],'.',color='red')
+
+#mask = ~np.isnan(N[ftype=='OG']) & ~np.isnan(LeafHeight[ftype=='OG'])
+#m1, c1, r1, p1, err1 = stats.linregress(N[ftype=='OG'][mask],LeafHeight[ftype=='OG'][mask])
+#mask = ~np.isnan(N[ftype=='SL']) & ~np.isnan(LeafHeight[ftype=='SL'])
+#m2, c2, r2, p2, err2 = stats.linregress(N[ftype=='SL'][mask],LeafHeight[ftype=='SL'][mask])
+mask = ~np.isnan(Narea[ftype=='OG']) & ~np.isnan(light_availability[ftype=='OG'])
+m1, c1, r1, p1, err1 = stats.linregress(Narea[ftype=='OG'][mask],light_availability[ftype=='OG'][mask])
+mask = ~np.isnan(Narea[ftype=='SL']) & ~np.isnan(light_availability[ftype=='SL'])
+m2, c2, r2, p2, err2 = stats.linregress(Narea[ftype=='SL'][mask],light_availability[ftype=='SL'][mask])
+p1str=''
+if p1<0.001:
+    p1str='***'
+elif p1<0.01:
+    p1str='** '
+elif p1<0.05:
+    p1str='*  '
+elif p1<0.1:
+    p1str='$^.$  '
+else:
+    p1str='   '
+
+p2str=''
+if p2<0.001:
+    p2str='***'
+elif p2<0.01:
+    p2str='** '
+elif p2<0.05:
+    p2str='*  '
+elif p2<0.1:
+    p2str='$^.$  '
+else:
+    p2str='   '
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str
+ax3.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
+
+ax3.set_ylabel('Light availability')
+#ax3.set_xlabel('%N')
+ax3.set_xlabel('[N]$_{area}$ / g(N)m$^{-2}$')
+
+
+ax4 = plt.subplot2grid((2,3),(1,0),sharey=ax1)
+ax4.annotate('d', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
+ax4.plot(LMA_C[ftype=='OG'],light_availability[ftype=='OG'],'.',color='blue')
+ax4.plot(LMA_C[ftype=='SL'],light_availability[ftype=='SL'],'.',color='red')
+print "LMA(C)"
+mask = ~np.isnan(LMA_C[ftype=='OG']) & ~np.isnan(light_availability[ftype=='OG'])
+print "OG: ", np.mean(LMA_C[ftype=='OG'][mask]), " +/- ", np.std(LMA_C[ftype=='OG'][mask])
+m1, c1, r1, p1, err1 = stats.linregress(LMA[ftype=='OG'][mask],light_availability[ftype=='OG'][mask])
+mask = ~np.isnan(LMA_C[ftype=='SL']) & ~np.isnan(light_availability[ftype=='SL'])
+print "SL: ", np.mean(LMA_C[ftype=='SL'][mask]), " +/- ", np.std(LMA_C[ftype=='SL'][mask])
+m2, c2, r2, p2, err2 = stats.linregress(LMA[ftype=='SL'][mask],light_availability[ftype=='SL'][mask])
+
+mask = ~np.isnan(LMA_C) & ~np.isnan(light_availability)
+print "all: ", np.mean(LMA_C[mask]), " +/- ", np.std(LMA_C[mask])
+
+p1str=''
+if p1<0.001:
+    p1str='***'
+elif p1<0.01:
+    p1str='** '
+elif p1<0.05:
+    p1str='*  '
+elif p1<0.1:
+    p1str='$^.$  '
+else:
+    p1str='   '
+
+p2str=''
+if p2<0.001:
+    p2str='***'
+elif p2<0.01:
+    p2str='** '
+elif p2<0.05:
+    p2str='*  '
+elif p2<0.1:
+    p2str='$^.$  '
+else:
+    p2str='   '
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str
+ax4.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
+
+ax4.set_ylabel('Light availability')
+ax4.set_xlabel('LMA(C) / g m$^{-2}$')
+
+ax5 = plt.subplot2grid((2,3),(1,1),sharey=ax1)
+ax5.annotate('e', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
+ax5.plot(LeafThickness[ftype=='OG'],light_availability[ftype=='OG'],'.',color='blue')
+ax5.plot(LeafThickness[ftype=='SL'],light_availability[ftype=='SL'],'.',color='red')
+
+mask = ~np.isnan(LeafThickness[ftype=='OG']) & ~np.isnan(light_availability[ftype=='OG'])
+m1, c1, r1, p1, err1 = stats.linregress(LeafThickness[ftype=='OG'][mask],light_availability[ftype=='OG'][mask])
+mask = ~np.isnan(LeafThickness[ftype=='SL']) & ~np.isnan(light_availability[ftype=='SL'])
+m2, c2, r2, p2, err2 = stats.linregress(LeafThickness[ftype=='SL'][mask],light_availability[ftype=='SL'][mask])
+p1str=''
+if p1<0.001:
+    p1str='***'
+elif p1<0.01:
+    p1str='** '
+elif p1<0.05:
+    p1str='*  '
+elif p1<0.1:
+    p1str='$^.$  '
+else:
+    p1str='   '
+
+p2str=''
+if p2<0.001:
+    p2str='***'
+elif p2<0.01:
+    p2str='** '
+elif p2<0.05:
+    p2str='*  '
+elif p2<0.1:
+    p2str='$^.$  '
+else:
+    p2str='   '
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str
+ax5.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
+
+ax5.set_ylabel('Light availability')
+ax5.set_xlabel('Leaf Thickness / mm')
+
+ax6 = plt.subplot2grid((2,3),(1,2),sharey=ax1)
+ax6.annotate('f', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
+ax6.plot(CNratio[ftype=='OG'],light_availability[ftype=='OG'],'.',color='blue')
+ax6.plot(CNratio[ftype=='SL'],light_availability[ftype=='SL'],'.',color='red')
+
+mask = ~np.isnan(CNratio[ftype=='OG']) & ~np.isnan(light_availability[ftype=='OG'])
+m1, c1, r1, p1, err1 = stats.linregress(CNratio[ftype=='OG'][mask],light_availability[ftype=='OG'][mask])
+mask = ~np.isnan(CNratio[ftype=='SL']) & ~np.isnan(light_availability[ftype=='SL'])
+m2, c2, r2, p2, err2 = stats.linregress(CNratio[ftype=='SL'][mask],light_availability[ftype=='SL'][mask])
+p1str=''
+if p1<0.001:
+    p1str='***'
+elif p1<0.01:
+    p1str='** '
+elif p1<0.05:
+    p1str='*  '
+elif p1<0.1:
+    p1str='$^.$  '
+else:
+    p1str='   '
+
+p2str=''
+if p2<0.001:
+    p2str='***'
+elif p2<0.01:
+    p2str='** '
+elif p2<0.05:
+    p2str='*  '
+elif p2<0.1:
+    p2str='$^.$  '
+else:
+    p2str='   '
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str
+ax6.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
+
+ax6.set_ylabel('Light availability')
+ax6.set_xlabel('C:N ratio')
+
+plt.tight_layout()
+plt.savefig('vertical_trait_distributions_with_respect_to_light.png')
+
+
+# plot light vs height
+plt.figure(5, facecolor='White',figsize=[5,5])
+
+ax1 = plt.subplot2grid((1,1),(0,0))
+ax1.annotate('a', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
+
+mask = ~np.isnan(light_availability[ftype=='OG']) & ~np.isnan(LeafHeight[ftype=='OG'])
+m1, c1, r1, p1, err1 = stats.linregress(light_availability[ftype=='OG'][mask],LeafHeight[ftype=='OG'][mask])
+mask = ~np.isnan(light_availability[ftype=='SL']) & ~np.isnan(LeafHeight[ftype=='SL'])
+m2, c2, r2, p2, err2 = stats.linregress(light_availability[ftype=='SL'][mask],LeafHeight[ftype=='SL'][mask])
+
+ax1.plot(light_availability[ftype=='OG'],LeafHeight[ftype=='OG'],'.',color='blue')
+ax1.plot(light_availability[ftype=='SL'],LeafHeight[ftype=='SL'],'.',color='red')
+ax1.plot(light_availability[plot=='B South'],LeafHeight[plot=='B South'],'.',color='green')
+
+p1str=''
+if p1<0.001:
+    p1str='***'
+elif p1<0.01:
+    p1str='** '
+elif p1<0.05:
+    p1str='*  '
+elif p1<0.1:
+    p1str='$^.$  '
+else:
+    p1str='   '
+
+p2str=''
+if p2<0.001:
+    p2str='***'
+elif p2<0.01:
+    p2str='** '
+elif p2<0.05:
+    p2str='*  '
+elif p2<0.1:
+    p2str='$^.$  '
+else:
+    p2str='   '
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str
+ax1.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
+
+ax1.set_ylabel('Height / m')
+ax1.set_xlabel('light_availability')
+plt.show()
