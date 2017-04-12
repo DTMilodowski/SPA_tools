@@ -116,6 +116,7 @@ layer_thickness = 1
 max_height = 80
 k=0.5
 for i in range(0,N_branches):
+    print i+1, '/', N_branches
     tree_index = np.all((census_plot==plot[i], np.any((tree_tag == tree[i], alt_tag == tree[i]),axis=0)),axis=0)
     tree_index_alt = np.all((field_data['plot']==plot[i], field_data['tag'] == tree[i]),axis=0)
 
@@ -123,25 +124,38 @@ for i in range(0,N_branches):
     if tree_index_alt.sum() == 1:
         subplot[i] = field_data['subplot'][tree_index_alt]
         tree_xy = np.asarray([field_data['Xfield'][tree_index_alt]+ plot_origin[plot[i]][0],field_data['Yfield'][tree_index_alt]+ plot_origin[plot[i]][1]])
-        tree_pts = filter_lidar_data_by_neighbourhood(plot_pts[plot[i]],tree_xy,radius)
-        heights,first_return_profile,n_ground_returns = LAD1.bin_returns(tree_pts, max_height,layer_thickness)
-        LAD_tree = LAD.estimate_LAD_MacArtherHorn(first_return_profile, n_ground_returns, layer_thickness, 1.)
-        I_tree=clim.estimate_canopy_light_transmittance(LAD_tree,heights,k)
-        ht_index = int(LeafHeight[i])
-        light_availability[i]=I_tree[ht_index]
-        tree_centric[i] = 1
+        tree_pts = lidar.filter_lidar_data_by_neighbourhood(plot_pts[plot[i]],tree_xy,radius)
+        if tree_pts.size > 0:
+            heights,first_return_profile,n_ground_returns = LAD.bin_returns(tree_pts, max_height,layer_thickness)
+            LAD_tree = LAD.estimate_LAD_MacArtherHorn(first_return_profile, n_ground_returns, layer_thickness, 1.)
+            I_tree=clim.estimate_canopy_light_transmittance(LAD_tree,heights,k)
+            if np.isfinite(LeafHeight[i]):
+                ht_index = int(LeafHeight[i])
+                light_availability[i]=I_tree[ht_index]
+                tree_centric[i] = 1
+            else:
+                light_availability[i]=I_tree[ht_index]=np.nan
+        else:
+            light_availability[i]=I_tree[ht_index]=np.nan
+            
 
     # otherwise, need to use census data, which only gives subplot level data
     elif tree_index.sum() == 1:
         #print "found tree :-)"
         subplot[i] = census_subplot[tree_index]
         subplot_poly = subplot_polygons[Plot_name][subplot_labels[plot[i]] == subplot[i],:,:]
-        sp_pts = lidar.filter_lidar_data_by_polygon(plot_pts[plot[i]],subplot_poly)
-        heights,first_return_profile,n_ground_returns = LAD1.bin_returns(tree_pts, max_height,layer_thickness)
-        LAD_subplot = LAD.estimate_LAD_MacArtherHorn(first_return_profile, n_ground_returns, layer_thickness, 1.)
-        I_subplot=clim.estimate_canopy_light_transmittance(LAD_subplot,heights,k)
-        ht_index = int(LeafHeight[i])
-        light_availability[i]=I_subplot[ht_index]
+        tree_pts = lidar.filter_lidar_data_by_polygon(plot_pts[plot[i]],subplot_poly)
+        if tree_pts.size > 0:
+            heights,first_return_profile,n_ground_returns = LAD1.bin_returns(tree_pts, max_height,layer_thickness)
+            LAD_subplot = LAD.estimate_LAD_MacArtherHorn(first_return_profile, n_ground_returns, layer_thickness, 1.)
+            I_subplot=clim.estimate_canopy_light_transmittance(LAD_subplot,heights,k)
+            if np.isfinite(LeafHeight[i]):
+                ht_index = int(LeafHeight[i])
+                light_availability[i]=I_subplot[ht_index]
+            else:
+                light_availability[i]=I_tree[ht_index]=np.nan
+        else:
+            light_availability[i]=I_tree[ht_index]=np.nan
 
     elif np.all((tree_index.sum()==0,tree_index_alt.sum()==0)):
         print "cannot find tree from traits record in the census data"
