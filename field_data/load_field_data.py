@@ -534,7 +534,7 @@ def collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_f
         # get branch info
         if np.sum(branch_ID==br)>0:
             branch_LeafHeight[i]=np.mean(branch_height[branch_ID==br])
-            print            branch_LeafHeight[i]
+            #print            branch_LeafHeight[i]
             branch_Ftype.append(forest_type_branch[branch_ID==br][0])
             ftype_flag = 1
         else:
@@ -1064,6 +1064,96 @@ def collate_plot_level_census_data(census_file):
         PlotDict['Mortality']=Mortality
         CensusDict[plot_names[i]]=PlotDict
     return CensusDict
+
+"""
+#THIS CAN PROBABLY BE DELETED!
+def collate_plot_level_census_data(census_file):
+
+    BALI_plot, Subplot, CensusDates, TreeTag_census, AltTag, DPOM, HPOM, Height, C_stem, C_coarse_root, RAINFOR_flag, Alive_flag, Species, SubplotCoords, WoodDensity = read_ICP_census_data(census_file)
+
+    plot_names = np.unique(BALI_plot)
+    N_plots = plot_names.size
+    
+    CensusDict={}
+    # Interesting properties: CanopyHeight, C_stem, C_coarse_roots, CensusDate
+    for i in range(0,N_plots):
+        plot_indices = BALI_plot==plot_names[i]
+        #Set up arrays to save
+        subplot_ids = np.unique(Subplot)
+        n_subplots = subplot_ids.size
+        dates = np.zeros((n_subplots,3),dtype = 'datetime64[D]')
+        CanHt = np.zeros((n_subplots,3))
+        Cstem = np.zeros((n_subplots,3))
+        Croot = np.zeros((n_subplots,3))
+        BasalArea = np.zeros((n_subplots,3))
+        # note that for growth, mortality and recruitment, first year of census will be nan values because no there are no previous surveys!
+        Growth = np.zeros((n_subplots,3))*np.nan
+        Mortality = np.zeros((n_subplots,3))*np.nan
+        Recruitment = np.zeros((n_subplots,3))*np.nan
+
+        for s in range(0,n_subplots):
+            subplot_indices = plot_indices * Subplot==subplot_ids[s]
+            for y in range(0,3):
+                datetemp = CensusDates[subplot_indices,y]
+                dates[s,y]= np.max(datetemp)
+
+                Cstemtemp = C_stem[subplot_indices,y]
+                if np.isfinite(Cstemtemp).sum()>0:
+                    Cstem[s,y]= np.sum(Cstemtemp[np.isfinite(Cstemtemp)])
+                else:
+                    Cstem[s,y]=np.nan
+
+                Croottemp = C_coarse_root[subplot_indices,y]
+                if np.isfinite(Croottemp).sum()>0:
+                    Croot[s,y]= np.sum(Croottemp[np.isfinite(Croottemp)])  
+                else:
+                    Croot[s,y]= np.nan
+
+                httemp = Height[subplot_indices,y]
+                if np.isfinite(httemp).sum()>0:
+                    CanHt[s,y]= np.mean(httemp[np.isfinite(httemp)])   
+                else:
+                    CanHt[s,y]=np.nan
+
+                DBHtemp = DPOM[subplot_indices,y]
+                if np.isfinite(DBHtemp).sum()>0:
+                    BasalArea[s,y]= np.pi*np.sum((DBHtemp[np.isfinite(DBHtemp)]/2)**2)   
+                else:
+                    BasalArea[s,y]=np.nan
+
+        # now lets do the growth, mortality and recruitment
+        for s in range(0,n_subplots):
+            subplot_indices = plot_indices * Subplot==subplot_ids[s]
+            Cwood_temp = C_stem[subplot_indices]+Croot[subplot_indices]
+            for y in range(1,3):
+                growth_indices = np.all((np.isfinite(Cwood_temp[:,y-1]),np.isfinite(Cwood_temp[:,y])),axis=0)
+                recruit_indices = np.all((np.isfinite(Cwood_temp[:,y]),~np.isfinite(Cwood_temp[:,y-1])),axis=0)
+                mortality_indices = np.all((np.isfinite(Cwood_temp[:,y-1]),~np.isfinite(Cwood_temp[:,y])),axis=0)
+                if np.isfinite(Cwood_temp).sum()>0:
+                    Growth[s,y] = np.sum(Cwood_temp[:,y][growth_indices]-Cwood_temp[:,y-1][growth_indices])
+                    Recruitment[s,y] = np.sum(Cwood_temp[:,y][recruit_indices])
+                    Mortality[s,y] = np.sum(Cwood_temp[:,y-1][mortality_indices])
+                else:
+                     Growth[s,y] = np.nan
+                     Recruitment[s,y] = np.nan
+                     Mortality[s,y] = np.nan
+
+        PlotDict = {}
+        PlotDict['n_subplots']=n_subplots
+        PlotDict['CanopyHeight']=CanHt
+        PlotDict['C_stem']=Cstem
+        PlotDict['C_coarse_roots']=Croot
+        PlotDict['C_wood']=Croot+Cstem
+        PlotDict['CensusDate']=dates
+        PlotDict['BasalArea']=BasalArea
+        PlotDict['Growth']= Growth
+        PlotDict['Recruitment']= Recruitment
+        PlotDict['Mortality']=Mortality
+        CensusDict[plot_names[i]]=PlotDict
+    return CensusDict
+
+"""
+
 
 
 # Read litterfall from GEM plot database file (converted to csv).  Mass collections (denoted with prefix m) are in g accumulated.  Otherwise given as flux in Mg C ha-1 yr-1
