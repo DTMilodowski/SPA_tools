@@ -58,9 +58,9 @@ def clean_photosynthesis_data(Asat,Amax,Rd,version = 0):
         Asat=Asat[Asat['Ci']<=300]
         Asat=Asat[Asat['Ci']>=150]
 
-    Asat_data = Asat[Asat['Ci']>0]
-    Amax_data = Amax[Amax['Ci']>0]
-    Rd_data = Rd[Rd['Ci']>0]
+    Asat = Asat[Asat['Ci']>0]
+    Amax = Amax[Amax['Ci']>0]
+    Rd = Rd[Rd['Ci']>0]
 
     if version == 2:
         # 5) Conductance threshold for Amax and Asat
