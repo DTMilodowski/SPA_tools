@@ -44,7 +44,14 @@ buffer_width = 5.
 for i in range(0,len(subplot_polygons.keys())):
     plot = subplot_polygons.keys()[i]
     print plot
-    plot_origin[plot] = subplot_polygons[plot][0,0,:]
+    if plot == 'Seraya':
+        plot_origin[plot] = subplot_polygons[plot][subplot_labels['Seraya']==6,0,:][0]
+    elif plot == 'DC1':
+        plot_origin[plot] = subplot_polygons[plot][subplot_labels['DC1']==1,3,:][0]
+    elif plot == 'DC2':
+        plot_origin[plot] = subplot_polygons[plot][subplot_labels['DC2']==1,3,:][0]
+    else:
+        plot_origin[plot] = subplot_polygons[plot][0,0,:]
 
     # clip LiDAR point cloud to plot level (this makes subsequent processing much faster)
     n_coord_pairs = subplot_polygons[plot].shape[0]*subplot_polygons[plot].shape[1]
@@ -111,12 +118,12 @@ light_availability = np.zeros(N_branches)*np.nan
 tree_centric = np.zeros(N_branches) # a flag to state whether or not we have tree-centric LAD to estimate light environment
 
 plots = np.unique(plot)
-radius = 5
+radius = 10.
 layer_thickness = 1
 max_height = 80
 k=0.5
 for i in range(0,N_branches):
-    print i+1, '/', N_branches
+    print i+1, '/', N_branches, plot[i]
     tree_index = np.all((census_plot==plot[i], np.any((tree_tag == tree[i], alt_tag == tree[i]),axis=0)),axis=0)
     tree_index_alt = np.all((field_data['plot']==plot[i], field_data['tag'] == tree[i]),axis=0)
 
@@ -129,21 +136,30 @@ for i in range(0,N_branches):
             heights,first_return_profile,n_ground_returns = LAD.bin_returns(tree_pts, max_height,layer_thickness)
             LAD_tree = LAD.estimate_LAD_MacArtherHorn(first_return_profile, n_ground_returns, layer_thickness, 1.)
             I_tree=clim.estimate_canopy_light_transmittance(LAD_tree,heights,k)
+            """
+            # subplot based profile
+            subplot_poly = subplot_polygons[plot[i]][subplot_labels[plot[i]] == subplot[i],:,:][0]
+            sp_pts = lidar.filter_lidar_data_by_polygon(plot_pts[plot[i]],subplot_poly)
+            heights_sp,first_return_profile_sp,n_ground_returns_sp = LAD.bin_returns(sp_pts, max_height,layer_thickness)
+            LAD_sp = LAD.estimate_LAD_MacArtherHorn(first_return_profile_sp, n_ground_returns_sp, layer_thickness, 1.)
+            I_sp=clim.estimate_canopy_light_transmittance(LAD_sp,heights_sp,k)
+            """
             if np.isfinite(LeafHeight[i]):
                 ht_index = int(LeafHeight[i])
                 light_availability[i]=I_tree[ht_index]
                 tree_centric[i] = 1
             else:
-                light_availability[i]=I_tree[ht_index]=np.nan
+                light_availability[i]=np.nan
+            #plt.show()
         else:
-            light_availability[i]=I_tree[ht_index]=np.nan
+            light_availability[i]=np.nan
             
 
     # otherwise, need to use census data, which only gives subplot level data
     elif tree_index.sum() == 1:
         #print "found tree :-)"
         subplot[i] = census_subplot[tree_index]
-        subplot_poly = subplot_polygons[Plot_name][subplot_labels[plot[i]] == subplot[i],:,:]
+        subplot_poly = subplot_polygons[plot[i]][subplot_labels[plot[i]] == subplot[i],:,:]
         tree_pts = lidar.filter_lidar_data_by_polygon(plot_pts[plot[i]],subplot_poly)
         if tree_pts.size > 0:
             heights,first_return_profile,n_ground_returns = LAD1.bin_returns(tree_pts, max_height,layer_thickness)
@@ -173,9 +189,43 @@ for i in range(0,N_branches):
 out = open('BALI_leaf_traits.csv','w')
 out.write('plot,subplot,forest_type,branch,shade_tag,spp,genus,leaf_height,light_availability,leaf_thickness,leaf_area,LMA,C%,Carea,N%,Narea,Vcmax,Rd\n')
 for i in range(0,N_branches):
-    out.write(plot[i] + ',' + str(subplot[i])  + ', ' + ftype[i] + ',' + branch[i]  + ',' + str(ShadeTag[i])  + ',' + spp[i] + ',' + spp[i].split(' ')[0] + ',' + str(LeafHeight[i]) + ',' + str(light_availability[i]) + + ',' + str(tree_centric[i]) + ',' +str( LeafThickness[i]) + ',' +str( LeafArea[i]) + ',' + str(LMA[i]) + ',' + str(C[i]) + ',' + str(LMA_C[i]) + ',' + str(N[i]) + ',' + str(Narea[i]) + ',' + str(Vcmax[i]) + ',' + str(Rd[i]) + '\n')
+    out.write(plot[i] + ',' + str(subplot[i])  + ', ' + ftype[i] + ',' + branch[i]  + ',' + str(ShadeTag[i])  + ',' + spp[i] + ',' + spp[i].split(' ')[0] + ',' + str(LeafHeight[i]) + ',' + str(light_availability[i]) + ',' + str(tree_centric[i]) + ',' + str( LeafThickness[i]) + ',' + str( LeafArea[i]) + ',' + str(LMA[i]) + ',' + str(C[i]) + ',' + str(LMA_C[i]) + ',' + str(N[i]) + ',' + str(Narea[i]) + ',' + str(Vcmax[i]) + ',' + str(Rd[i]) + '\n')
 
 out.close()
+
+
+
+"""
+# let's do some checks on positioning
+for i in range(0,len(plots)):
+    
+    plt.figure(1, facecolor='White',figsize=[6,6])
+    ax1 = plt.subplot2grid((1,1),(0,0))
+    print plots[i]
+    for s in range(0,25):
+        plt.plot(subplot_polygons[plots[i]][s,:,0],subplot_polygons[plots[i]][s,:,1],'-')
+    plt.plot(plot_origin[plots[i]][0],plot_origin[plots[i]][1],'o')
+
+    mask = field_data['plot']==plots[i]
+    tree_xy = np.asarray([field_data['Xfield'][mask]+ plot_origin[plots[i]][0],field_data['Yfield'][mask]+ plot_origin[plots[i]][1]])
+    #print tree_xy
+    plt.plot(tree_xy[0,:],tree_xy[1,:],'o')
+    plt.show()
+
+"""
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Figure 4 - vertical distribution of leaf traits in terms of light availability rather than leaf height per se:
 # Vcmax, Rd, N,
@@ -189,6 +239,8 @@ mask = ~np.isnan(Vcmax[ftype=='OG']) & ~np.isnan(light_availability[ftype=='OG']
 m1, c1, r1, p1, err1 = stats.linregress(Vcmax[ftype=='OG'][mask],light_availability[ftype=='OG'][mask])
 mask = ~np.isnan(Vcmax[ftype=='SL']) & ~np.isnan(light_availability[ftype=='SL'])
 m2, c2, r2, p2, err2 = stats.linregress(Vcmax[ftype=='SL'][mask],light_availability[ftype=='SL'][mask])
+mask = ~np.isnan(Vcmax) & ~np.isnan(light_availability)
+m, c, r, p, err = stats.linregress(Vcmax[mask],light_availability[mask])
 
 ax1.plot(Vcmax[ftype=='OG'],light_availability[ftype=='OG'],'.',color='blue')
 ax1.plot(Vcmax[ftype=='SL'],light_availability[ftype=='SL'],'.',color='red')
@@ -217,7 +269,21 @@ elif p2<0.1:
 else:
     p2str='   '
 
-stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str
+pstr=''
+if p<0.001:
+    pstr='***'
+elif p<0.01:
+    pstr='** '
+elif p<0.05:
+    pstr='*  '
+elif p<0.1:
+    pstr='$^.$  '
+else:
+    pstr='   '
+
+
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str + '\nR$^2$=' + '%.3f' % r**2 + pstr
 ax1.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
 
 ax1.set_ylabel('Light availability')
@@ -232,6 +298,8 @@ mask = ~np.isnan(Rd[ftype=='OG']) & ~np.isnan(light_availability[ftype=='OG'])
 m1, c1, r1, p1, err1 = stats.linregress(Rd[ftype=='OG'][mask],light_availability[ftype=='OG'][mask])
 mask = ~np.isnan(Rd[ftype=='SL']) & ~np.isnan(light_availability[ftype=='SL'])
 m2, c2, r2, p2, err2 = stats.linregress(Rd[ftype=='SL'][mask],light_availability[ftype=='SL'][mask])
+mask = ~np.isnan(Rd) & ~np.isnan(light_availability)
+m, c, r, p, err = stats.linregress(Rd[mask],light_availability[mask])
 p1str=''
 if p1<0.001:
     p1str='***'
@@ -256,7 +324,20 @@ elif p2<0.1:
 else:
     p2str='   '
 
-stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str
+
+pstr=''
+if p<0.001:
+    pstr='***'
+elif p<0.01:
+    pstr='** '
+elif p<0.05:
+    pstr='*  '
+elif p<0.1:
+    pstr='$^.$  '
+else:
+    pstr='   '
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str + '\nR$^2$=' + '%.3f' % r**2 + pstr
 ax2.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
 
 ax2.set_ylabel('Light availability')
@@ -277,6 +358,8 @@ mask = ~np.isnan(Narea[ftype=='OG']) & ~np.isnan(light_availability[ftype=='OG']
 m1, c1, r1, p1, err1 = stats.linregress(Narea[ftype=='OG'][mask],light_availability[ftype=='OG'][mask])
 mask = ~np.isnan(Narea[ftype=='SL']) & ~np.isnan(light_availability[ftype=='SL'])
 m2, c2, r2, p2, err2 = stats.linregress(Narea[ftype=='SL'][mask],light_availability[ftype=='SL'][mask])
+mask = ~np.isnan(Narea) & ~np.isnan(light_availability)
+m, c, r, p, err = stats.linregress(Narea[mask],light_availability[mask])
 p1str=''
 if p1<0.001:
     p1str='***'
@@ -301,7 +384,21 @@ elif p2<0.1:
 else:
     p2str='   '
 
-stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str
+pstr=''
+if p<0.001:
+    pstr='***'
+elif p<0.01:
+    pstr='** '
+elif p<0.05:
+    pstr='*  '
+elif p<0.1:
+    pstr='$^.$  '
+else:
+    pstr='   '
+
+
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str + '\nR$^2$=' + '%.3f' % r**2 + pstr
 ax3.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
 
 ax3.set_ylabel('Light availability')
@@ -320,6 +417,8 @@ m1, c1, r1, p1, err1 = stats.linregress(LMA[ftype=='OG'][mask],light_availabilit
 mask = ~np.isnan(LMA_C[ftype=='SL']) & ~np.isnan(light_availability[ftype=='SL'])
 print "SL: ", np.mean(LMA_C[ftype=='SL'][mask]), " +/- ", np.std(LMA_C[ftype=='SL'][mask])
 m2, c2, r2, p2, err2 = stats.linregress(LMA[ftype=='SL'][mask],light_availability[ftype=='SL'][mask])
+mask = ~np.isnan(LMA_C) & ~np.isnan(light_availability)
+m, c, r, p, err = stats.linregress(LMA_C[mask],light_availability[mask])
 
 mask = ~np.isnan(LMA_C) & ~np.isnan(light_availability)
 print "all: ", np.mean(LMA_C[mask]), " +/- ", np.std(LMA_C[mask])
@@ -348,7 +447,21 @@ elif p2<0.1:
 else:
     p2str='   '
 
-stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str
+pstr=''
+if p<0.001:
+    pstr='***'
+elif p<0.01:
+    pstr='** '
+elif p<0.05:
+    pstr='*  '
+elif p<0.1:
+    pstr='$^.$  '
+else:
+    pstr='   '
+
+
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str + '\nR$^2$=' + '%.3f' % r**2 + pstr
 ax4.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
 
 ax4.set_ylabel('Light availability')
@@ -363,6 +476,8 @@ mask = ~np.isnan(LeafThickness[ftype=='OG']) & ~np.isnan(light_availability[ftyp
 m1, c1, r1, p1, err1 = stats.linregress(LeafThickness[ftype=='OG'][mask],light_availability[ftype=='OG'][mask])
 mask = ~np.isnan(LeafThickness[ftype=='SL']) & ~np.isnan(light_availability[ftype=='SL'])
 m2, c2, r2, p2, err2 = stats.linregress(LeafThickness[ftype=='SL'][mask],light_availability[ftype=='SL'][mask])
+mask = ~np.isnan(LeafThickness) & ~np.isnan(light_availability)
+m, c, r, p, err = stats.linregress(LeafThickness[mask],light_availability[mask])
 p1str=''
 if p1<0.001:
     p1str='***'
@@ -387,7 +502,21 @@ elif p2<0.1:
 else:
     p2str='   '
 
-stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str
+pstr=''
+if p<0.001:
+    pstr='***'
+elif p<0.01:
+    pstr='** '
+elif p<0.05:
+    pstr='*  '
+elif p<0.1:
+    pstr='$^.$  '
+else:
+    pstr='   '
+
+
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str + '\nR$^2$=' + '%.3f' % r**2 + pstr
 ax5.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
 
 ax5.set_ylabel('Light availability')
@@ -402,6 +531,8 @@ mask = ~np.isnan(CNratio[ftype=='OG']) & ~np.isnan(light_availability[ftype=='OG
 m1, c1, r1, p1, err1 = stats.linregress(CNratio[ftype=='OG'][mask],light_availability[ftype=='OG'][mask])
 mask = ~np.isnan(CNratio[ftype=='SL']) & ~np.isnan(light_availability[ftype=='SL'])
 m2, c2, r2, p2, err2 = stats.linregress(CNratio[ftype=='SL'][mask],light_availability[ftype=='SL'][mask])
+mask = ~np.isnan(CNratio) & ~np.isnan(light_availability)
+m, c, r, p, err = stats.linregress(CNratio[mask],light_availability[mask])
 p1str=''
 if p1<0.001:
     p1str='***'
@@ -426,7 +557,21 @@ elif p2<0.1:
 else:
     p2str='   '
 
-stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str
+pstr=''
+if p<0.001:
+    pstr='***'
+elif p<0.01:
+    pstr='** '
+elif p<0.05:
+    pstr='*  '
+elif p<0.1:
+    pstr='$^.$  '
+else:
+    pstr='   '
+
+
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str + '\nR$^2$=' + '%.3f' % r**2 + pstr
 ax6.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
 
 ax6.set_ylabel('Light availability')
@@ -449,7 +594,6 @@ m2, c2, r2, p2, err2 = stats.linregress(light_availability[ftype=='SL'][mask],Le
 
 ax1.plot(light_availability[ftype=='OG'],LeafHeight[ftype=='OG'],'.',color='blue')
 ax1.plot(light_availability[ftype=='SL'],LeafHeight[ftype=='SL'],'.',color='red')
-ax1.plot(light_availability[plot=='B South'],LeafHeight[plot=='B South'],'.',color='green')
 
 p1str=''
 if p1<0.001:
@@ -480,4 +624,5 @@ ax1.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor
 
 ax1.set_ylabel('Height / m')
 ax1.set_xlabel('light_availability')
+plt.savefig('height_vs_light.png')
 plt.show()
