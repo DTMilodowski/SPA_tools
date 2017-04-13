@@ -64,8 +64,8 @@ def clean_photosynthesis_data(Asat,Amax,Rd,version = 0):
 
     if version == 2:
         # 5) Conductance threshold for Amax and Asat
-        Amax=Amax[Amax['Cond']<=0.04]
-        Asat=Asat[Asat['Cond']<=0.04]
+        Amax=Amax[Amax['Cond']>=0.04]
+        Asat=Asat[Asat['Cond']>=0.04]
     
     if version == 0:
         # 7) Check H2O - should be between 15 and 35
