@@ -34,8 +34,51 @@ def load_species_list(spp_file):
         print G[i]
     genus = np.asarray(G)
     return branch,spp, genus
+# clean LiCOR photosynthesis data
+# Version 0 (default) is my own cleaning
+# Version 1 is a very similar cleaning scheme from Sabine
+# Version 2 is a conservative cleaning scheme based on liCOR instructions
+def clean_photosynthesis_data(Asat,Amax,Rd,version = 0):
+    # 1) Rd if photosynthesis is positive when insolation(PARi) is zero, delete
+    Rd=Rd[Rd['Photo']<=0]
+    # 2) Filter out bad photosynthetic rates for Amax and Asat
+    Amax=Amax[Amax['Photo']>=0]
+    Asat=Asat[Asat['Photo']>=0]
+    # 3) Stable parameters threshold (0.7)
+    Rd=Rd_data[Rd['StableF']>0.7]
+    Amax=Amax[Amax['StableF']>0.7]
+    Asat=Asat[Asat['StableF']>0.7]
 
-def load_photosynthesis_data(photo_file):
+    # 4) Filter bad Ci
+    if version == 0:
+        Asat = Asat[Asat['Ci']<=Asat['CO2R']]
+        Amax = Amax[Amax['Ci']<=Amax['CO2R']]
+
+    elif np.any((version == 1,version ==2)):
+        Asat=Asat[Asat['Ci']<=300]
+        Asat=Asat[Asat['Ci']>=150]
+
+    Asat_data = Asat[Asat['Ci']>0]
+    Amax_data = Amax[Amax['Ci']>0]
+    Rd_data = Rd[Rd['Ci']>0]
+
+    if version == 2:
+        # 5) Conductance threshold for Amax and Asat
+        Amax=Amax[Amax['Cond']<=0.04]
+        Asat=Asat[Asat['Cond']<=0.04]
+    
+    if version == 0:
+        # 7) Check H2O - should be between 15 and 35
+        Rd=Rd_data[Rd['H2OR']>=15]
+        Amax=Amax[Amax['H2OR']>=15]
+        Asat=Asat[Asat['H2OR']>=15]
+    
+        Rd=Rd_data[Rd['H2OR']<=35]
+        Amax=Amax[Amax['H2OR']<=35]
+        Asat=Asat[Asat['H2OR']<=35]
+    return Asat, Amax, Rd
+
+def load_photosynthesis_data(photo_file,version=0):
     datatype = {'names': ('Licor', 'code', 'Obs', 'Time', 'FTime', 'EBal', 'Photo', 'Cond', 'Ci', 'Trmmol', 'VpdL', 'CTleaf','Area', 'BLC_1', 'StmRat','BLCond','Tair','Tleaf','Tblk','CO2R','CO2S','H2OR','H2OS','RH_R','RH_S','Flow','PARi','PARo','Press','CsMch','HsMch','CsMchSD','HsMchSD','CrMchSD','HrMchSD','StableF','BLCslope','BLCoffst','f_parin','f_parout','alphaK'), 'formats': ('i8','S32','i8','S32','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16','f16')}
     data = np.genfromtxt(photo_file, skiprows = 1, delimiter = ',',dtype=datatype)
 
@@ -92,14 +135,12 @@ def load_photosynthesis_data(photo_file):
 
         # 1) First, split up Asat, Amax and Rd measurements
         Rd_data = Leaf_data[Leaf_data['PARi']==0]
-        temp_data = Leaf_data[Leaf_data['PARi']>0]
-        
-        Asat_data = temp_data[temp_data['CO2R']<500]
-        Amax_data = temp_data[temp_data['CO2R']>500]
-        
-        temp_data = None
+        Asat_data = Leaf_data[np.all((Leaf_data['CO2R']<500,Leaf_data['PARi']>=1900),axis=0)]
+        Amax_data = Leaf_data[np.all((Leaf_data['CO2R']>500,Leaf_data['PARi']>=1900,Leaf_data['CO2R']>=2100),axis=0)]
 
         # post processing
+        Asat_data, Amax_data, Rd_data = clean_photosynthesis_data(Asat_data,Amax_data,Rd_data,version)
+        """
         # 2) Rd if photosynthesis is positive when insolation(PARi) is zero, delete
         Rd_data=Rd_data[Rd_data['Photo']<=0]
         # 3) Filter out bad photosynthetic rates for Amax and Asat
@@ -110,13 +151,17 @@ def load_photosynthesis_data(photo_file):
         Amax_data=Amax_data[Amax_data['StableF']>0.7]
         Asat_data=Asat_data[Asat_data['StableF']>0.7]
         """
-        # 5) Conductance threshold for Amax and Asat
+
+        """
+        # 5) Conductance threshold for Amax and Asat - v. conservative
         Amax_data=Amax_data[Amax_data['Cond']<=0.04]
         Asat_data=Asat_data[Asat_data['Cond']<=0.04]
         
         # 6) Filter bad Asat Ci
         Asat_data=Asat_data[Asat_data['Ci']<=300]
         Asat_data=Asat_data[Asat_data['Ci']>=150]
+        """
+
         """
         Asat_data = Asat_data[Asat_data['Ci']<=Asat_data['CO2R']]
         Amax_data = Amax_data[Amax_data['Ci']<=Amax_data['CO2R']]
@@ -133,11 +178,7 @@ def load_photosynthesis_data(photo_file):
         Rd_data=Rd_data[Rd_data['H2OR']<=35]
         Amax_data=Amax_data[Amax_data['H2OR']<=35]
         Asat_data=Asat_data[Asat_data['H2OR']<=35]
-    
-        # 8) For Asat and Amax, make sure that PARi is sufficiently high
-        Asat_data=Asat_data[Asat_data['PARi']>=1900]
-        Amax_data=Amax_data[Amax_data['PARi']>=1900]
-
+        """
         #---------------------------------------------------------------------
         # Now post-processing is complete calculate c2co and Km
         # following Crous et al., 2013
@@ -495,8 +536,12 @@ def load_leaf_traits_old(traits_file, branch_file, leaf_file):
     Ftype = np.asarray(forest_type)
     return plot, Ftype, Tree_tag, leafID, branchID, shade_tag, tree_height, leaf_height, leaf_thickness, leaf_area, SLA, LMA, Ci, VPD, LeafT, gs, Km, c2co, Asat, Amax, Rd, Vcmax, Jmax
 
-
-def collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_file):
+# Collate traits data at the branch level
+# Version refers to the procedure used to clean LiCOR photosynthesis data
+# Version 0 (default) is my own cleaning scheme
+# Version 1 is a very similar cleaning scheme from Sabine
+# Version 2 is a conservative cleaning scheme based on liCOR instructions
+def collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_file,version=0):
     plot_photo, leaf_ID_photo, branch_ID_photo, shade_tag_photo, Ci, VPD, LeafT, gs, Km, c2co, Asat, Amax, Rd, Vcmax, Jmax= load_photosynthesis_data(photo_file)
 
     forest_type_branch, branch_ID, tree_height, branch_height = load_branch_info(branch_file)
