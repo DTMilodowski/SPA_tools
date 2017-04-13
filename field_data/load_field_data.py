@@ -39,6 +39,7 @@ def load_species_list(spp_file):
 # Version 1 is a very similar cleaning scheme from Sabine
 # Version 2 is a conservative cleaning scheme based on liCOR instructions
 def clean_photosynthesis_data(Asat,Amax,Rd,version = 0):
+    print "cleaning scheme: ", version
     # 1) Rd if photosynthesis is positive when insolation(PARi) is zero, delete
     Rd=Rd[Rd['Photo']<=0]
     # 2) Filter out bad photosynthetic rates for Amax and Asat
@@ -542,7 +543,7 @@ def load_leaf_traits_old(traits_file, branch_file, leaf_file):
 # Version 1 is a very similar cleaning scheme from Sabine
 # Version 2 is a conservative cleaning scheme based on liCOR instructions
 def collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_file,version=0):
-    plot_photo, leaf_ID_photo, branch_ID_photo, shade_tag_photo, Ci, VPD, LeafT, gs, Km, c2co, Asat, Amax, Rd, Vcmax, Jmax= load_photosynthesis_data(photo_file)
+    plot_photo, leaf_ID_photo, branch_ID_photo, shade_tag_photo, Ci, VPD, LeafT, gs, Km, c2co, Asat, Amax, Rd, Vcmax, Jmax= load_photosynthesis_data(photo_file,version)
 
     forest_type_branch, branch_ID, tree_height, branch_height = load_branch_info(branch_file)
 
