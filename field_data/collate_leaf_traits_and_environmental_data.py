@@ -64,7 +64,8 @@ lidar_pts = None
 
 
 # Load in the traits
-branch, spp, genus, N, Narea, C, CNratio, SLA, LMA, LeafArea, LeafThickness, LeafHeight, VPD, Rd, Vcmax, Jmax, ShadeTag, ftype = field.collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_file)
+cleaning_scheme = 1 # 0 = mine, 1 = Sabine's, 2 = conservative
+branch, spp, genus, N, Narea, C, CNratio, SLA, LMA, LeafArea, LeafThickness, LeafHeight, VPD, Rd, Vcmax, Jmax, ShadeTag, ftype = field.collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_file,cleaning_scheme)
 
 # Filter traits data
 LeafThickness[LeafThickness>0.60]=np.nan
