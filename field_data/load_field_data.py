@@ -45,7 +45,7 @@ def clean_photosynthesis_data(Asat,Amax,Rd,version = 0):
     Amax=Amax[Amax['Photo']>=0]
     Asat=Asat[Asat['Photo']>=0]
     # 3) Stable parameters threshold (0.7)
-    Rd=Rd_data[Rd['StableF']>0.7]
+    Rd=Rd[Rd['StableF']>0.7]
     Amax=Amax[Amax['StableF']>0.7]
     Asat=Asat[Asat['StableF']>0.7]
 
