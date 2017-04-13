@@ -69,11 +69,11 @@ def clean_photosynthesis_data(Asat,Amax,Rd,version = 0):
     
     if version == 0:
         # 7) Check H2O - should be between 15 and 35
-        Rd=Rd_data[Rd['H2OR']>=15]
+        Rd=Rd[Rd['H2OR']>=15]
         Amax=Amax[Amax['H2OR']>=15]
         Asat=Asat[Asat['H2OR']>=15]
     
-        Rd=Rd_data[Rd['H2OR']<=35]
+        Rd=Rd[Rd['H2OR']<=35]
         Amax=Amax[Amax['H2OR']<=35]
         Asat=Asat[Asat['H2OR']<=35]
     return Asat, Amax, Rd
