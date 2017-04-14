@@ -137,7 +137,7 @@ def load_photosynthesis_data(photo_file,version=0):
         Rd_data = Leaf_data[Leaf_data['PARi']==0]
         Asat_data = Leaf_data[np.all((Leaf_data['CO2R']<500,Leaf_data['PARi']>=1900),axis=0)]
         Amax_data = Leaf_data[np.all((Leaf_data['CO2R']>1900,Leaf_data['PARi']>=1900,Leaf_data['CO2R']<2100),axis=0)]
-        print Amax_data
+
         # post processing
         Asat_data, Amax_data, Rd_data = clean_photosynthesis_data(Asat_data,Amax_data,Rd_data,version)
         """
