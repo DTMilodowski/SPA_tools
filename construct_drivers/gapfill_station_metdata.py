@@ -201,7 +201,8 @@ def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data, min
 
     met_vars = met_data.keys() 
     N_vars = len(met_vars)
-    template = np.zeros(met_data[met_vars[0]].size)
+    N_tsteps = met_data[met_vars[0]].size
+    template = np.zeros(N_tsteps)
 
     #---------------------------------------------------------------------------------------------
     # first fdeal with type one gaps
@@ -235,8 +236,9 @@ def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data, min
     rain_event_records = np.sum((soil1_filt>STA_LTA_threshold,soil2_filt>STA_LTA_threshold,soil3_filt>STA_LTA_threshold),axis=0)
     rain_event_detection = rain_event_records == N_active_sensors
 
-    # loop through time series - step through daily - and mark days with "missing rainfall" with gap2
-
+    # loop through time series - step through daily - and mark days with "missing rainfall" with number 2
+    
+    
     
 
     return gaps
