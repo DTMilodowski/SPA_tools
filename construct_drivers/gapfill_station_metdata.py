@@ -207,5 +207,9 @@ def bias_correction_monthly(met_data,RS_data):
 
 # function to gapfill metdata using remote sensed data
 def gapfill_metdata(met_data,RS_data,gaps):
-    gapfilled_data = {}
-    return gapfilled_data
+    met_variables = met_data.keys() 
+    N_vars = len(met_variables)
+    for vv in range(0,N_vars):
+        gap_mask = gaps[met_variables[vv]]>0
+        met_data[met_variables[vv]][mask]=RS_data[met_variables[vv]][mask]
+    return met_data
