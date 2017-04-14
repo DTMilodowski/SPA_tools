@@ -198,13 +198,18 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
 def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data):
     gaps = {}
 
-    met_variables = met_data.keys() 
-    N_vars = len(met_variables)
-    N_tsteps = met
-    for vv in range(0,N_vars):
-        gaps[met_variables[vv]]=0
+    met_vars = met_data.keys() 
+    N_vars = len(met_vars)
+    template = np.zeros(met_data[met_vars[0]].size)
 
+    # first fdeal with type one gaps
+    for vv in range(0,N_vars):
+        gaps[met_variables[vv]]=template.copy()
+        nodata_mask = np.isnan(met_data[met_vars[vv]])
+        gaps[met_variables[vv]][nodata_mask]=1
     
+    # now deal with type two gaps
+
     return gaps
 
 # function to gapfill metdata using remote sensed data
