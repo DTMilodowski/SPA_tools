@@ -157,6 +157,7 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
             index = TRMM_dates == output_time_series[tt]
             pptn_RS[tt] = TRMM_pptn[index]
 
+    #--------------------------------------------------------------------------------------------
     # now put all arrays into dictionaries so it is easy to access later
     meteorological_data_dict['date'] = output_time_series.copy()
     meteorological_data_dict['airT'] = airT_station.copy()
@@ -183,7 +184,7 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
 
     return met_data_dict, soil_data_dict, RS_data_dict
 
-
+#---------------------------------------------------------------------------------------------
 # function to search through the local met and soil data, looking for gaps
 #    Two types of gap here:
 #    (i)  data gaps where instruments were not recording, due to malfunction, power supply issues etc.
@@ -195,20 +196,48 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
 #         Rainfall events are detected based on a STA/LTA threshold.  Gaps are located when no rain is received
 #         in the same day that there is a trigger event recorded in the soil moisture time series.
 # Type one and type two gaps are returned with a marker specifying which type of gap are present
-def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data):
+def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data, minimum_pptn_rate, STA_LTA_threshold):
     gaps = {}
 
     met_vars = met_data.keys() 
     N_vars = len(met_vars)
     template = np.zeros(met_data[met_vars[0]].size)
 
+    #---------------------------------------------------------------------------------------------
     # first fdeal with type one gaps
     for vv in range(0,N_vars):
         gaps[met_variables[vv]]=template.copy()
         nodata_mask = np.isnan(met_data[met_vars[vv]])
         gaps[met_variables[vv]][nodata_mask]=1
     
+    #---------------------------------------------------------------------------------------------
     # now deal with type two gaps
+    # - first of all find out how many sensors are recording. rainfall events must
+    #   be deteected across all active sensors to limit false positives.
+    N_active_sensors = np.sum((~np.isnan(soil_data['soil_moisture_05cm']),~np.isnan(soil_data['soil_moisture_10cm']),~np.isnan(soil_data['soil_moisture_20cm'])),axis=0)
+
+    # - now use moving averages to define LTA and STA
+    STA_half_width = 2. # 2 timesteps (1 hrs) either side of target point - moving average over 2.5 hrs
+    LTA_half_width = 48. # 48 timesteps (24hrs) either side of target point - moving average over 48.5 hours
+    soil1_STA = met.moving_average_1D(soil_data['soil_moisture_05cm'],STA_half_width)
+    soil2_STA = met.moving_average_1D(soil_data['soil_moisture_10cm'],STA_half_width)
+    soil3_STA = met.moving_average_1D(soil_data['soil_moisture_20cm'],STA_half_width)
+
+    soil1_LTA = met.moving_average_1D(soil_data['soil_moisture_05cm'],LTA_half_width)
+    soil2_LTA = met.moving_average_1D(soil_data['soil_moisture_10cm'],LTA_half_width)
+    soil3_LTA = met.moving_average_1D(soil_data['soil_moisture_20cm'],LTA_half_width)
+
+    soil1_filt = soil1_STA/soil1_LTA
+    soil2_filt = soil2_STA/soil2_LTA
+    soil3_filt = soil3_STA/soil3_LTA
+
+    # find pptn events according to STA/LTA - two options: (i) peak detection; <<(ii) periods above threshold>>.
+    rain_event_records = np.sum((soil1_filt>STA_LTA_threshold,soil2_filt>STA_LTA_threshold,soil3_filt>STA_LTA_threshold),axis=0)
+    rain_event_detection = rain_event_records == N_active_sensors
+
+    # loop through time series - step through daily - and mark days with "missing rainfall" with gap2
+
+    
 
     return gaps
 
