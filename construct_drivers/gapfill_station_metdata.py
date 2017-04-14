@@ -275,3 +275,36 @@ def gapfill_metdata(met_data,RS_data,gaps):
 def bias_correction_monthly(met_data,RS_data):
     bias_corrected_data = {}
     return bias_corrected_data
+
+def plot_pptn_detection(dates, pptn, soil1, soil2, soil3, soil1_STA_LTA, soil2_STA_LTA, soil3_STA_LTA, gaps):
+
+    rain_on = np.zeros(len(dates))
+    rain_on[rain_sample>0.5]=1*np.ceil(np.max(pptn[np.isfinite(pptn)]))
+    nodata=np.zeros(len(dates))
+    nodata[np.isnan(pptn)]=1*np.ceil(np.max(rain_sample[np.isfinite(rain_sample)]))
+    x_range = np.arange(0,len(dates))
+    x_range=x_range/48.
+
+    plt.figure(4, facecolor='White',figsize=[15,4])  
+    ax1 = plt.subplot2grid((1,1),(0,0))
+    ax1.plot(x_range,pptn,'-',color='#1E7581')
+    ax1.fill_between(x_range,zero,rain_on,color='#1E7581', alpha = 0.2)
+    ax1.fill_between(x_range,zero,nodata,color='#FF8E85', alpha = 0.2)
+    ax1.fill_between(x_range,zero,pptn,color='#1E7581')
+    ax1.set_ylabel('precipitation / mm')
+    ax1.set_xlabel('Days since ' + start_date_str)
+    ax1.set_ylim(ymax=np.ceil(np.max(pptn[np.isfinite(pptn)])))
+    ax1.set_xlim(xmin=0,xmax=np.max(x_range))
+
+    ax2 = plt.twinx(ax1)
+    ax2.plot(x_range,soil1,'-',color='#6ACB7B',label="5 cm")
+    ax2.plot(x_range,soil2,'-',color='#24A23A',label="10 cm")
+    ax2.plot(x_range,soil3,'-',color='#006612',label="20 cm")
+    ax2.set_ylabel('Volumetric soil moisture content')
+    ax2.set_xlim(xmin=0,xmax=np.max(x_range))
+    ax2.set_ylim(ymin=0)
+    ax2.legend(loc=2)
+    plt.tight_layout(pad=2)
+    plt.show()
+
+    return 0
