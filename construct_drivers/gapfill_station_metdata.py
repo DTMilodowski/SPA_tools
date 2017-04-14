@@ -158,6 +158,7 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
             pptn_RS[tt] = TRMM_pptn[index]
 
     # now put all arrays into dictionaries so it is easy to access later
+    meteorological_data_dict['date'] = output_time_series.copy()
     meteorological_data_dict['airT'] = airT_station.copy()
     meteorological_data_dict['pptn'] = pptn_station.copy()
     meteorological_data_dict['rh'] = rh_station.copy()
@@ -166,10 +167,12 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
     meteorological_data_dict['BP'] = BP_station.copy()
     meteorological_data_dict['swr'] = swr_station.copy()
     
+    soil_meteorological_data_dict['date'] = output_time_series.copy()
     soil_data_dict['soil_moisture_05cm'] = soil_moisture_05cm.copy()    
     soil_data_dict['soil_moisture_10cm'] = soil_moisture_10cm.copy()    
     soil_data_dict['soil_moisture_20cm'] = soil_moisture_20cm.copy()
     
+    RS_data_dict['date'] = output_time_series.copy()
     RS_data_dict['airT'] = airT_RS.copy()
     RS_data_dict['pptn'] = pptn_RS.copy()
     RS_data_dict['rh'] = rh_RS.copy()
@@ -195,6 +198,13 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
 def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data):
     gaps = {}
 
+    met_variables = met_data.keys() 
+    N_vars = len(met_variables)
+    N_tsteps = met
+    for vv in range(0,N_vars):
+        gaps[met_variables[vv]]=0
+
+    
     return gaps
 
 # function to gapfill metdata using remote sensed data
