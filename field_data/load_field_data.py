@@ -31,7 +31,6 @@ def load_species_list(spp_file):
     G=[]
     for i in range(N):
         G.append(spp[i].split(' ')[0])
-        print G[i]
     genus = np.asarray(G)
     return branch,spp, genus
 # clean LiCOR photosynthesis data
