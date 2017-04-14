@@ -39,7 +39,6 @@ def load_species_list(spp_file):
 # Version 1 is a very similar cleaning scheme from Sabine
 # Version 2 is a conservative cleaning scheme based on liCOR instructions
 def clean_photosynthesis_data(Asat,Amax,Rd,version = 0):
-    print "cleaning scheme: ", version
     # 1) Rd if photosynthesis is positive when insolation(PARi) is zero, delete
     Rd=Rd[Rd['Photo']<=0]
     # 2) Filter out bad photosynthetic rates for Amax and Asat
@@ -137,8 +136,8 @@ def load_photosynthesis_data(photo_file,version=0):
         # 1) First, split up Asat, Amax and Rd measurements
         Rd_data = Leaf_data[Leaf_data['PARi']==0]
         Asat_data = Leaf_data[np.all((Leaf_data['CO2R']<500,Leaf_data['PARi']>=1900),axis=0)]
-        Amax_data = Leaf_data[np.all((Leaf_data['CO2R']>500,Leaf_data['PARi']>=1900,Leaf_data['CO2R']>=2100),axis=0)]
-
+        Amax_data = Leaf_data[np.all((Leaf_data['CO2R']>1900,Leaf_data['PARi']>=1900,Leaf_data['CO2R']<2100),axis=0)]
+        print Amax_data
         # post processing
         Asat_data, Amax_data, Rd_data = clean_photosynthesis_data(Asat_data,Amax_data,Rd_data,version)
         """
