@@ -234,12 +234,30 @@ def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data, min
 
     # find pptn events according to STA/LTA - two options: (i) peak detection; <<(ii) periods above threshold>>.
     rain_event_records = np.sum((soil1_filt>STA_LTA_threshold,soil2_filt>STA_LTA_threshold,soil3_filt>STA_LTA_threshold),axis=0)
-    rain_event_detection = rain_event_records == N_active_sensors
+    rain_event = rain_event_records == N_active_sensors
 
     # loop through time series - step through daily - and mark days with "missing rainfall" with number 2
+    days = met_data['date'].astype('datetime64[D]')
+    days_unique = np.unique(days)
+    N_days = days_unique.size
     
-    
-    
+    rain_detect_flag = 0
+    rain_event_flag = 0
+    for dd in range(0,N_days):
+        day_index = days==days_unique[dd]
+        if np.sum(rain_event[day_index]) > 0:
+            rain_event_flag = 1
+        if np.max(met_data['pptn'][day_index]) > minimum_pptn_rate:
+            rain_detect_flag = 1
+
+        if np.all(rain_detect_flag ==1,rain_event_flag = 0):
+            if np.min(N_active_sensors[day_index])>0:
+                print "!!! ", days_unique[dd], " scheme not working - soil data fails to pick up precipitation event"
+        elif np.all(rain_detect_flag == 0, rain_event_flag == 1):
+            gaps['pptn'][day_index]==2    
+
+    rain_detect_flag = 0
+    rain_event_flag = 0       
 
     return gaps
 
