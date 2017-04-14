@@ -197,14 +197,6 @@ def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data):
 
     return gaps
 
-
-# function to bias-correct met data.
-def bias_correction_monthly(met_data,RS_data):
-    bias_corrected_data = {}
-    return bias_corrected_data
-
-
-
 # function to gapfill metdata using remote sensed data
 def gapfill_metdata(met_data,RS_data,gaps):
     met_variables = met_data.keys() 
@@ -213,3 +205,9 @@ def gapfill_metdata(met_data,RS_data,gaps):
         gap_mask = gaps[met_variables[vv]]>0
         met_data[met_variables[vv]][mask]=RS_data[met_variables[vv]][mask]
     return met_data
+
+
+# function to bias-correct met data.
+def bias_correction_monthly(met_data,RS_data):
+    bias_corrected_data = {}
+    return bias_corrected_data
