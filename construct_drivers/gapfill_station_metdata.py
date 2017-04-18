@@ -258,7 +258,7 @@ def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data, min
 
     rain_detect_flag = 0
     rain_event_flag = 0       
-
+    plot_pptn_detection(met_data['date'], met_data['pptn'], soil_data['soil_moisture_05cm'],soil_data['soil_moisture_10cm'],soil_data['soil_moisture_20cm'], soil1_filt, soil2_filt, soil3_filt, gaps['pptn'])
     return gaps
 
 # function to gapfill metdata using remote sensed data
