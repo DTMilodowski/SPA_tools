@@ -172,7 +172,7 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
     meteorological_data_dict['BP'] = BP_station.copy()
     meteorological_data_dict['swr'] = swr_station.copy()
     
-    soil_meteorological_data_dict['date'] = output_time_series.copy()
+    soil_data_dict['date'] = output_time_series.copy()
     soil_data_dict['soil_moisture_05cm'] = soil_moisture_05cm.copy()    
     soil_data_dict['soil_moisture_10cm'] = soil_moisture_10cm.copy()    
     soil_data_dict['soil_moisture_20cm'] = soil_moisture_20cm.copy()
