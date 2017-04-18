@@ -104,7 +104,7 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
     # period of interest
     start = np.datetime64(dt.datetime.strptime(start_date, '%d/%m/%Y %H:%M'))
     end = np.datetime64(dt.datetime.strptime(end_date, '%d/%m/%Y %H:%M'))
-    output_time_series = np.arange(start,end,np,timedelta64(30,'m'))
+    output_time_series = np.arange(start,end,np.timedelta64(30,'m'))
     N_tsteps_out = output_time_series.size
 
     # First deal with the local observations
