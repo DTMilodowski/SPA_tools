@@ -123,7 +123,7 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
     soil_moisture_05cm = np.zeros(N_tsteps_out)*np.nan
     soil_moisture_10cm = np.zeros(N_tsteps_out)*np.nan
     soil_moisture_20cm = np.zeros(N_tsteps_out)*np.nan
-    
+    print "\t\t local_observations"
     for tt in range(0,N_tsteps_out):
         if output_time_series[tt] in dates_series:
             index = dates_series == output_time_series[tt]
@@ -138,7 +138,6 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
             soil_moisture_05cm[tt] = soil_data_host[index,6]
             soil_moisture_10cm[tt] = soil_data_host[index,7]
             soil_moisture_20cm[tt] = soil_data_host[index,8]
-
     # Second deal with RS data
     airT_RS = np.zeros(N_tsteps_out)*np.nan
     pptn_RS = np.zeros(N_tsteps_out)*np.nan
@@ -147,7 +146,7 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
     vpd_RS = np.zeros(N_tsteps_out)*np.nan
     BP_RS = np.zeros(N_tsteps_out)*np.nan
     swr_RS = np.zeros(N_tsteps_out)*np.nan
-
+    print "\t\t remote sensing data"
     for tt in range(0,N_tsteps_out):
         if output_time_series[tt] in ERA_dates:
             index = ERA_dates == output_time_series[tt]
@@ -162,6 +161,7 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
             pptn_RS[tt] = TRMM_pptn[index]
 
     #--------------------------------------------------------------------------------------------
+    print "\t6 - transferring data into output dictionaries"
     # now put all arrays into dictionaries so it is easy to access later
     meteorological_data_dict['date'] = output_time_series.copy()
     meteorological_data_dict['airT'] = airT_station.copy()
