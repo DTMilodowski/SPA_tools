@@ -32,4 +32,6 @@ end_date= '01/01/2016 00:00'
 
 met_data_dict, soil_data_dict, RS_data_dict = gap.load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_date)
 
-gaps = gap.locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data, minimum_pptn_rate, STA_LTA_threshold)
+minimum_pptn_rate = 0.5
+STA_LTA_threshold = 4.
+gaps = gap.locate_metdata_gaps_using_soil_moisture_time_series(met_data_dict, soil_data_dict, minimum_pptn_rate, STA_LTA_threshold)
