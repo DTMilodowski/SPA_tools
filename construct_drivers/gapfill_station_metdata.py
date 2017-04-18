@@ -22,9 +22,10 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
     meteorological_data_dict = {}
     soil_data_dict = {} 
     RS_data_dict = {}
-
+    print "Loading met data"
     #---------------------------------------------------------------------------------------------
     # load local meteorological data
+    print "\t1 - loading station data" 
     met_dates, met_data = met.read_atm_metfile(met_file)
     # load local soil data
     soil_dates, soil_data= met.read_soil_metfile(soil_file)
@@ -45,6 +46,7 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
     #---------------------------------------------------------------------------------------------
     # Now read in ERA-Interim data
     # read in ERA interim.
+    print "\t2 - loading ERA-Interim Reanalyses"
     ERA_start = '01/01/2011 00:00'
     ERA_start_date = np.datetime64(dt.datetime.strptime(ERA_start, '%d/%m/%Y %H:%M'))
 
@@ -67,6 +69,7 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
     
     #---------------------------------------------------------------------------------------------
     # Now read in TRMM
+    print "\t3 - loading TRMM precipitation data"
     TRMM_dates_init, TRMM_pptn_init = TRMM.read_TRMM_file(TRMM_file)
     TRMM_pptn = TRMM.calc_pptn_specify_tstep(TRMM_pptn_init,tstep)
 
@@ -78,7 +81,7 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
 
     #---------------------------------------------------------------------------------------------
     # Now use average daily climatology to temporally downscale RS data to specified timestep
-    
+    print "\t4 - use average day climatology to downsample met data to specified timestep"
     # i) Get "average" conditions from met station
     time_in_hours, average_day_pptn, average_day_airT, average_day_RH, average_day_VPD, average_day_PAR, = met.retrieve_monthly_climatology(dates_series,met_data_host)
 
@@ -92,8 +95,8 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
     annual_average_day_vpd=met.moving_average_1D(np.mean(average_day_VPD,axis=0),window_half_width,boundary_flag)
 
     # iii) use these averages to model RS metdata at specified timestep
-    sw_mod = wg.calc_sw_specify_tstep_with_climatology(sw_era, tstep, annual_average_day_PAR)
-    PAR_mod = sw_mod*2.3
+    swr_mod = wg.calc_sw_specify_tstep_with_climatology(sw_era, tstep, annual_average_day_PAR)
+    PAR_mod = swr_mod*2.3
     airT_mod = wg.calc_airT_specify_tstep_with_climatology(airT_era, tstep, annual_average_day_airT)
     rh_mod = wg.calc_rh_specify_tstep_with_climatology(rh_era, tstep, annual_average_day_RH)
     vpd_mod =wg.calc_airT_specify_tstep_with_climatology(vpd_era, tstep, annual_average_day_vpd)
@@ -102,6 +105,7 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
     #---------------------------------------------------------------------------------------------
     # Now the data has been prepared, position data on equivalent time series clipped to specified
     # period of interest
+    print "\t5 - clipping time series"
     start = np.datetime64(dt.datetime.strptime(start_date, '%d/%m/%Y %H:%M'))
     end = np.datetime64(dt.datetime.strptime(end_date, '%d/%m/%Y %H:%M'))
     output_time_series = np.arange(start,end,np.timedelta64(30,'m'))
