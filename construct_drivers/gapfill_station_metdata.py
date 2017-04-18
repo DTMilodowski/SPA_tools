@@ -72,7 +72,7 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
 
     n_tsteps_TRMM = TRMM_pptn.size
     TRMM_dates = np.zeros(n_tsteps_TRMM).astype('datetime64[m]')
-    for i in range(0,n_tsteps_ERA):
+    for i in range(0,n_tsteps_TRMM):
         time_increment = int(i*(tstep*60))
         TRMM_dates[i]=TRMM_dates_init[0]+np.timedelta64(time_increment,'m')
 
