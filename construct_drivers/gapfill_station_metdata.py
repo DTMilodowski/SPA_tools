@@ -283,8 +283,13 @@ def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data, min
     soil2_filt = soil2_STA/soil2_LTA
     soil3_filt = soil3_STA/soil3_LTA
 
+    peaks1 = find_maxima(soil1_filt, STA_LTA_threshold)
+    peaks2 = find_maxima(soil2_filt, STA_LTA_threshold)
+    peaks3 = find_maxima(soil3_filt, STA_LTA_threshold)
+
     # find pptn events according to STA/LTA - two options: (i) peak detection; <<(ii) periods above threshold>>.
-    rain_event_records = np.sum((soil1_filt>STA_LTA_threshold,soil2_filt>STA_LTA_threshold,soil3_filt>STA_LTA_threshold),axis=0)
+    #rain_event_records = np.sum((soil1_filt>STA_LTA_threshold,soil2_filt>STA_LTA_threshold,soil3_filt>STA_LTA_threshold),axis=0)
+    rain_event_records = np.sum((peaks1,peaks2,peaks3),axis=0)
     rain_event = np.all((rain_event_records>0,rain_event_records == N_active_sensors),axis=0)
 
     # loop through time series - step through daily - and mark days with "missing rainfall" with number 2
@@ -306,12 +311,6 @@ def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data, min
             rain_detect_flag = True # rain detected in gauge
             type_2_gap_continue = False # as rain detected, therefore gauge is working again!
             gaps['pptn'][day_index]=0
-
-        """
-        if np.all((rain_detect_flag,~rain_event_flag)):
-            if np.min(N_active_sensors[day_index])>0:
-                print dd,  "!!! ", days_unique[dd], " scheme not working - soil data fails to pick up precipitation event"
-        """
         elif type_2_gap_continue:
             print dd, " continue type 2 gap"
             gaps['pptn'][day_index]=2    
@@ -322,7 +321,12 @@ def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data, min
         else:
             print dd, " no rain, but working ok"
             gaps['pptn'][day_index]=0
-            
+
+        """
+        if np.all((rain_detect_flag,~rain_event_flag)):
+            if np.min(N_active_sensors[day_index])>0:
+                print dd,  "!!! ", days_unique[dd], " scheme not working - soil data fails to pick up precipitation event"
+        """
 
         rain_detect_flag = False
         rain_event_flag = False  
@@ -343,7 +347,7 @@ def find_maxima(signal_y, threshold=0):
     peak_present = np.zeros(N)
     for i in range(1,N-1):
         if np.all((signal_y[i]>=threshold,signal_y[i]>signal_y[i-1],signal_y[i]>signal_y[i+1])):
-            peak_present = 1
+            peak_present[i] = 1
     return peak_present
 
 
