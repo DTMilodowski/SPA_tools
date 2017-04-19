@@ -19,7 +19,7 @@ import TRMM_processing as TRMM
 # in equivalent time series that can be cross-interrogated in preparation for gapfilling.
 # The timestep is set in hours and by default is 0.5, which is ideal for running SPA
 def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_date, tstep = 0.5):
-    meteorological_data_dict = {}
+    met_data_dict = {}
     soil_data_dict = {} 
     RS_data_dict = {}
     print "Loading met data"
@@ -123,7 +123,29 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
     soil_moisture_05cm = np.zeros(N_tsteps_out)*np.nan
     soil_moisture_10cm = np.zeros(N_tsteps_out)*np.nan
     soil_moisture_20cm = np.zeros(N_tsteps_out)*np.nan
+
     print "\t\t local_observations"
+    out_indices = np.all((output_time_series >= dates_series[0], output_time_series <= dates_series[-1]),axis=0)
+    data_i1 = 0
+    data_i2 = dates_series.size
+    data_indices =  np.arange(0,dates_series.size)
+    if dates_series[0]<output_time_series[0]:
+        data_i1 = data_indices[dates_series==output_time_series[0]][0]
+    if dates_series[-1]>output_time_series[-1]:
+        data_i2 = data_indices[dates_series==output_time_series[-1]][0]+1
+
+    airT_station[out_indices] = met_data_host[data_i1:data_i2,0]
+    pptn_station[out_indices] = met_data_host[data_i1:data_i2,1]
+    rh_station[out_indices] = met_data_host[data_i1:data_i2,5]
+    PAR_station[out_indices] = met_data_host[data_i1:data_i2,3]
+    vpd_station[out_indices] = met_data_host[data_i1:data_i2,2]
+    BP_station[out_indices] = met_data_host[data_i1:data_i2,6]
+    swr_station[out_indices] = met_data_host[data_i1:data_i2,4]
+
+    soil_moisture_05cm[out_indices] = soil_data_host[data_i1:data_i2,6]
+    soil_moisture_10cm[out_indices] = soil_data_host[data_i1:data_i2,7]
+    soil_moisture_20cm[out_indices] = soil_data_host[data_i1:data_i2,8]
+    """
     for tt in range(0,N_tsteps_out):
         if output_time_series[tt] in dates_series:
             index = dates_series == output_time_series[tt]
@@ -138,6 +160,7 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
             soil_moisture_05cm[tt] = soil_data_host[index,6]
             soil_moisture_10cm[tt] = soil_data_host[index,7]
             soil_moisture_20cm[tt] = soil_data_host[index,8]
+    """
     # Second deal with RS data
     airT_RS = np.zeros(N_tsteps_out)*np.nan
     pptn_RS = np.zeros(N_tsteps_out)*np.nan
@@ -146,7 +169,34 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
     vpd_RS = np.zeros(N_tsteps_out)*np.nan
     BP_RS = np.zeros(N_tsteps_out)*np.nan
     swr_RS = np.zeros(N_tsteps_out)*np.nan
+
     print "\t\t remote sensing data"
+    out_indices = np.all((output_time_series >= ERA_dates[0], output_time_series <= ERA_dates[-1]),axis=0)
+    data_i1 = 0
+    data_i2 = ERA_dates.size
+    data_indices =  np.arange(0,ERA_dates.size)
+    if ERA_dates[0]<output_time_series[0]:
+        data_i1 = data_indices[ERA_dates==output_time_series[0]][0]
+    if ERA_dates[-1]>output_time_series[-1]:
+        data_i2 = data_indices[ERA_dates==output_time_series[-1]][0]+1
+
+    airT_RS[out_indices] = airT_mod[data_i1:data_i2]
+    rh_RS[out_indices] = rh_mod[data_i1:data_i2]
+    PAR_RS[out_indices] = PAR_mod[data_i1:data_i2]
+    vpd_RS[out_indices] = vpd_mod[data_i1:data_i2]
+    BP_RS[out_indices] = sp_mod[data_i1:data_i2]
+    swr_RS[out_indices] = swr_mod[data_i1:data_i2]
+
+    out_indices = np.all((output_time_series >= TRMM_dates[0], output_time_series <= TRMM_dates[-1]),axis=0)
+    data_i1 = 0
+    data_i2 = TRMM_dates.size
+    data_indices =  np.arange(0,TRMM_dates.size)
+    if TRMM_dates[0]<output_time_series[0]:
+        data_i1 = data_indices[TRMM_dates==output_time_series[0]][0]
+    if TRMM_dates[-1]>output_time_series[-1]:
+        data_i2 = data_indices[TRMM_dates==output_time_series[-1]][0]+1
+    pptn_RS[out_indices] = TRMM_pptn[data_i1:data_i2]
+    """
     for tt in range(0,N_tsteps_out):
         if output_time_series[tt] in ERA_dates:
             index = ERA_dates == output_time_series[tt]
@@ -159,18 +209,18 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
         if output_time_series[tt] in TRMM_dates:
             index = TRMM_dates == output_time_series[tt]
             pptn_RS[tt] = TRMM_pptn[index]
-
+    """
     #--------------------------------------------------------------------------------------------
     print "\t6 - transferring data into output dictionaries"
     # now put all arrays into dictionaries so it is easy to access later
-    meteorological_data_dict['date'] = output_time_series.copy()
-    meteorological_data_dict['airT'] = airT_station.copy()
-    meteorological_data_dict['pptn'] = pptn_station.copy()
-    meteorological_data_dict['rh'] = rh_station.copy()
-    meteorological_data_dict['PAR'] = PAR_station.copy()
-    meteorological_data_dict['vpd'] = vpd_station.copy()
-    meteorological_data_dict['BP'] = BP_station.copy()
-    meteorological_data_dict['swr'] = swr_station.copy()
+    met_data_dict['date'] = output_time_series.copy()
+    met_data_dict['airT'] = airT_station.copy()
+    met_data_dict['pptn'] = pptn_station.copy()
+    met_data_dict['rh'] = rh_station.copy()
+    met_data_dict['PAR'] = PAR_station.copy()
+    met_data_dict['vpd'] = vpd_station.copy()
+    met_data_dict['BP'] = BP_station.copy()
+    met_data_dict['swr'] = swr_station.copy()
     
     soil_data_dict['date'] = output_time_series.copy()
     soil_data_dict['soil_moisture_05cm'] = soil_moisture_05cm.copy()    
