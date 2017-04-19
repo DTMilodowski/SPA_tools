@@ -283,8 +283,6 @@ def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data, min
     soil2_filt = soil2_STA/soil2_LTA
     soil3_filt = soil3_STA/soil3_LTA
 
-    peaks_soil1 = 
-
     # find pptn events according to STA/LTA - two options: (i) peak detection; <<(ii) periods above threshold>>.
     rain_event_records = np.sum((soil1_filt>STA_LTA_threshold,soil2_filt>STA_LTA_threshold,soil3_filt>STA_LTA_threshold),axis=0)
     rain_event = np.all((rain_event_records>0,rain_event_records == N_active_sensors),axis=0)
@@ -338,6 +336,17 @@ def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data, min
 
     plot_pptn_detection(met_data['date'], met_data['pptn'], soil_data['soil_moisture_05cm'],soil_data['soil_moisture_10cm'],soil_data['soil_moisture_20cm'], soil1_filt, soil2_filt, soil3_filt, gaps['pptn'])
     return gaps
+
+# Simple function to find local maxima based on immediate neighbourhood
+def find_maxima(signal_y, threshold=0):
+    N=signal_y.size
+    peak_present = np.zeros(N)
+    for i in range(1,N-1):
+        if np.all((signal_y[i]>=threshold,signal_y[i]>signal_y[i-1],signal_y[i]>signal_y[i+1])):
+            peak_present = 1
+    return peak_present
+
+
 
 # function to gapfill metdata using remote sensed data
 def gapfill_metdata(met_data,RS_data,gaps):
