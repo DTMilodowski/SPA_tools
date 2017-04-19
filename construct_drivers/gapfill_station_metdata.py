@@ -261,9 +261,10 @@ def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data, min
     #---------------------------------------------------------------------------------------------
     # first fdeal with type one gaps
     for vv in range(0,N_vars):
-        gaps[met_variables[vv]]=template.copy()
-        nodata_mask = np.isnan(met_data[met_vars[vv]])
-        gaps[met_variables[vv]][nodata_mask]=1
+        if met_vars[vv]!='date':
+            gaps[met_vars[vv]]=template.copy()
+            nodata_mask = np.isnan(met_data[met_vars[vv]])
+            gaps[met_vars[vv]][nodata_mask]=1
     
     #---------------------------------------------------------------------------------------------
     # now deal with type two gaps
@@ -288,7 +289,7 @@ def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data, min
 
     # find pptn events according to STA/LTA - two options: (i) peak detection; <<(ii) periods above threshold>>.
     rain_event_records = np.sum((soil1_filt>STA_LTA_threshold,soil2_filt>STA_LTA_threshold,soil3_filt>STA_LTA_threshold),axis=0)
-    rain_event = rain_event_records == N_active_sensors
+    rain_event = np.all((rain_event_records>0,rain_event_records == N_active_sensors),axis=0)
 
     # loop through time series - step through daily - and mark days with "missing rainfall" with number 2
     days = met_data['date'].astype('datetime64[D]')
@@ -304,10 +305,12 @@ def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data, min
         if np.max(met_data['pptn'][day_index]) > minimum_pptn_rate:
             rain_detect_flag = 1
 
-        if np.all(rain_detect_flag ==1,rain_event_flag = 0):
+        if np.all((rain_detect_flag ==1,rain_event_flag == 0)):
             if np.min(N_active_sensors[day_index])>0:
                 print "!!! ", days_unique[dd], " scheme not working - soil data fails to pick up precipitation event"
-        elif np.all(rain_detect_flag == 0, rain_event_flag == 1):
+        elif np.all((rain_detect_flag == 0, rain_event_flag == 1)):
+            print day_index
+            type_2_gaps = np.all((day_index,gaps['pptn']!=1),axis=0)
             gaps['pptn'][day_index]==2    
 
     rain_detect_flag = 0
@@ -320,8 +323,9 @@ def gapfill_metdata(met_data,RS_data,gaps):
     met_variables = met_data.keys() 
     N_vars = len(met_variables)
     for vv in range(0,N_vars):
-        gap_mask = gaps[met_variables[vv]]>0
-        met_data[met_variables[vv]][mask]=RS_data[met_variables[vv]][mask]
+        if met_variables[vv]!='date':
+            gap_mask = gaps[met_variables[vv]]>0
+            met_data[met_variables[vv]][mask]=RS_data[met_variables[vv]][mask]
     return met_data
 
 
