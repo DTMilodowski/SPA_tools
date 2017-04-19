@@ -35,3 +35,8 @@ met_data_dict, soil_data_dict, RS_data_dict = gap.load_all_metdata(met_file, soi
 minimum_pptn_rate = 0.5
 STA_LTA_threshold = 4.
 gaps = gap.locate_metdata_gaps_using_soil_moisture_time_series(met_data_dict, soil_data_dict, minimum_pptn_rate, STA_LTA_threshold)
+
+
+gapfilled_met_data_dict = gapfill_metdata(met_data_dict,RS_data_dict,gaps)
+
+
