@@ -258,16 +258,12 @@ def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data, min
     N_tsteps = met_data[met_vars[0]].size
     template = np.zeros(N_tsteps)
 
-    #---------------------------------------------------------------------------------------------
-    # first fdeal with type one gaps
+    # set up blank gap arrays
     for vv in range(0,N_vars):
         if met_vars[vv]!='date':
             gaps[met_vars[vv]]=template.copy()
-            nodata_mask = np.isnan(met_data[met_vars[vv]])
-            gaps[met_vars[vv]][nodata_mask]=1
-    
     #---------------------------------------------------------------------------------------------
-    # now deal with type two gaps
+    # deal with type two gaps
     # - first of all find out how many sensors are recording. rainfall events must
     #   be deteected across all active sensors to limit false positives.
     N_active_sensors = np.sum((~np.isnan(soil_data['soil_moisture_05cm']),~np.isnan(soil_data['soil_moisture_10cm']),~np.isnan(soil_data['soil_moisture_20cm'])),axis=0)
@@ -287,6 +283,8 @@ def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data, min
     soil2_filt = soil2_STA/soil2_LTA
     soil3_filt = soil3_STA/soil3_LTA
 
+    peaks_soil1 = 
+
     # find pptn events according to STA/LTA - two options: (i) peak detection; <<(ii) periods above threshold>>.
     rain_event_records = np.sum((soil1_filt>STA_LTA_threshold,soil2_filt>STA_LTA_threshold,soil3_filt>STA_LTA_threshold),axis=0)
     rain_event = np.all((rain_event_records>0,rain_event_records == N_active_sensors),axis=0)
@@ -296,25 +294,48 @@ def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data, min
     days_unique = np.unique(days)
     N_days = days_unique.size
     
-    rain_detect_flag = 0
-    rain_event_flag = 0
+    rain_detect_flag = False
+    rain_event_flag = False
+    type_2_gap_continue = False
+
     for dd in range(0,N_days):
         day_index = days==days_unique[dd]
         if np.sum(rain_event[day_index]) > 0:
-            rain_event_flag = 1
+            rain_event_flag = True # rain indicated by soil moisture records
+
         if np.max(met_data['pptn'][day_index]) > minimum_pptn_rate:
-            rain_detect_flag = 1
+            print dd, " halleluia it rained"
+            rain_detect_flag = True # rain detected in gauge
+            type_2_gap_continue = False # as rain detected, therefore gauge is working again!
+            gaps['pptn'][day_index]=0
 
-        if np.all((rain_detect_flag ==1,rain_event_flag == 0)):
+        """
+        if np.all((rain_detect_flag,~rain_event_flag)):
             if np.min(N_active_sensors[day_index])>0:
-                print "!!! ", days_unique[dd], " scheme not working - soil data fails to pick up precipitation event"
-        elif np.all((rain_detect_flag == 0, rain_event_flag == 1)):
-            print day_index
-            type_2_gaps = np.all((day_index,gaps['pptn']!=1),axis=0)
-            gaps['pptn'][day_index]==2    
+                print dd,  "!!! ", days_unique[dd], " scheme not working - soil data fails to pick up precipitation event"
+        """
+        elif type_2_gap_continue:
+            print dd, " continue type 2 gap"
+            gaps['pptn'][day_index]=2    
+        elif np.all((~rain_detect_flag, rain_event_flag)):
+            print dd, " found type 2 gap"
+            gaps['pptn'][day_index]=2    
+            type_2_gap_continue = True        
+        else:
+            print dd, " no rain, but working ok"
+            gaps['pptn'][day_index]=0
+            
 
-    rain_detect_flag = 0
-    rain_event_flag = 0       
+        rain_detect_flag = False
+        rain_event_flag = False  
+
+
+    #---------------------------------------------------------------------------------------------
+    # now quickly deal with type one gaps - where data was not recorded at all
+    for vv in range(0,N_vars):
+        if met_vars[vv]!='date':
+            gaps[met_vars[vv]][nodata_mask]=1
+
     plot_pptn_detection(met_data['date'], met_data['pptn'], soil_data['soil_moisture_05cm'],soil_data['soil_moisture_10cm'],soil_data['soil_moisture_20cm'], soil1_filt, soil2_filt, soil3_filt, gaps['pptn'])
     return gaps
 
@@ -336,10 +357,11 @@ def bias_correction_monthly(met_data,RS_data):
 
 def plot_pptn_detection(dates, pptn, soil1, soil2, soil3, soil1_STA_LTA, soil2_STA_LTA, soil3_STA_LTA, gaps):
 
+    import matplotlib.transforms as mtransforms
+
+
     rain_on = np.zeros(len(dates))
-    rain_on[rain_sample>0.5]=1*np.ceil(np.max(pptn[np.isfinite(pptn)]))
-    nodata=np.zeros(len(dates))
-    nodata[np.isnan(pptn)]=1*np.ceil(np.max(rain_sample[np.isfinite(rain_sample)]))
+    rain_on[pptn>0.5]=1*np.ceil(np.max(pptn[np.isfinite(pptn)]))
     type1_gap = np.zeros(len(dates))
     type2_gap = np.zeros(len(dates))
     type1_gap[gaps==1] = np.ceil(np.max(pptn[np.isfinite(pptn)]))
@@ -349,30 +371,44 @@ def plot_pptn_detection(dates, pptn, soil1, soil2, soil3, soil1_STA_LTA, soil2_S
     x_range = np.arange(0,len(dates))
     x_range=x_range/48.
 
-    plt.figure(4, facecolor='White',figsize=[15,8])  
-    ax1 = plt.subplot2grid((2,1),(0,0))
+    plt.figure(4, facecolor='White',figsize=[15,10])  
+    ax1 = plt.subplot2grid((3,1),(0,0))
+    trans = mtransforms.blended_transform_factory(ax1.transData, ax1.transAxes)
     ax1.plot(x_range,pptn,'-',color='#1E7581')
-    ax1.fill_between(x_range,zero,type1_gap,color='orange', alpha = 0.2)
-    ax1.fill_between(x_range,zero,type2_gap,color='red', alpha = 0.2)
+    ax1.fill_between(x_range, 0, 1, where=gaps == 2, facecolor='green', alpha=0.5,edgecolor='None', transform=trans)
+    ax1.fill_between(x_range, 0, 1, where=gaps == 1, facecolor='red', alpha=0.5, edgecolor='None', transform=trans)
+    #ax1.fill_between(x_range,zero,type1_gap,color='orange', alpha = 0.2)
+    #ax1.fill_between(x_range,zero,type2_gap,color='red', alpha = 0.2)
     ax1.fill_between(x_range,zero,pptn,color='#1E7581')
     ax1.set_ylabel('precipitation / mm')
-    ax1.set_xlabel('Days since ' + start_date_str)
-    ax1.set_ylim(ymax=np.ceil(np.max(pptn[np.isfinite(pptn)])))
+    #ax1.set_xlabel('Days since ' + start_date_str)
+    ax1.set_ylim(ymin=0,ymax=np.ceil(np.max(pptn[np.isfinite(pptn)])))
     ax1.set_xlim(xmin=0,xmax=np.max(x_range))
 
-    ax2 = plt.subplot2grid((2,1),(1,0),sharex=ax1)
-    ax2.plot(x_range,soil1,':',color='#6ACB7B')
-    ax2.plot(x_range,soil2,':',color='#24A23A')
-    ax2.plot(x_range,soil3,':',color='#006612')
-    ax2.plot(x_range,soil1_STA_LTA,'-',color='#6ACB7B',label="5 cm")
-    ax2.plot(x_range,soil2_STA_LTA,'-',color='#24A23A',label="10 cm")
-    ax2.plot(x_range,soil3_STA_LTA,'-',color='#006612',label="20 cm")
-    ax2.fill_between(x_range,zero,type1_gap,color='orange', alpha = 0.2)
-    ax2.fill_between(x_range,zero,type2_gap,color='red', alpha = 0.2)
+    ax2 = plt.subplot2grid((3,1),(1,0),sharex=ax1)
+    trans = mtransforms.blended_transform_factory(ax2.transData, ax2.transAxes)
+    ax2.plot(x_range,soil1,'-',color='#6ACB7B')
+    ax2.plot(x_range,soil2,'-',color='#24A23A')
+    ax2.plot(x_range,soil3,'-',color='#006612')
+    ax2.fill_between(x_range, 0, 1, where=gaps == 2, facecolor='green', alpha=0.5,edgecolor='None', transform=trans)
+    ax2.fill_between(x_range, 0, 1, where=gaps == 1, facecolor='red', alpha=0.5, edgecolor='None', transform=trans)
+    #ax2.fill_between(x_range,zero,type1_gap,color='orange', alpha = 0.2)
+    #ax2.fill_between(x_range,zero,type2_gap,color='red', alpha = 0.2)
     ax2.set_ylabel('Volumetric soil moisture content')
     ax2.set_xlim(xmin=0,xmax=np.max(x_range))
     ax2.set_ylim(ymin=0,ymax=0.7)
     ax2.legend(loc=2)
+
+    ax3 = plt.subplot2grid((3,1),(2,0),sharex=ax1)
+    trans = mtransforms.blended_transform_factory(ax3.transData, ax3.transAxes)
+    ax3.plot(x_range,soil1_STA_LTA,'-',color='#6ACB7B',label="5 cm")
+    ax3.plot(x_range,soil2_STA_LTA,'-',color='#24A23A',label="10 cm")
+    ax3.plot(x_range,soil3_STA_LTA,'-',color='#006612',label="20 cm")
+    ax3.fill_between(x_range, 0, 1, where=gaps == 2, facecolor='green', alpha=0.5, edgecolor='None',transform=trans)
+    ax3.fill_between(x_range, 0, 1, where=gaps == 1, facecolor='red', alpha=0.5,edgecolor='None', transform=trans)
+    ax3.set_ylabel('STA/LTA')
+    ax3.set_xlim(xmin=0,xmax=np.max(x_range))
+    ax3.set_ylim(ymin=np.nanmin((soil1_STA_LTA, soil2_STA_LTA, soil3_STA_LTA)),ymax=np.nanmax((soil1_STA_LTA, soil2_STA_LTA, soil3_STA_LTA)))
     plt.tight_layout(pad=2)
     plt.show()
 
