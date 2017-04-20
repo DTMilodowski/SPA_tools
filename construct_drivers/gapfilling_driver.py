@@ -37,6 +37,20 @@ STA_LTA_threshold = 4.
 gaps = gap.locate_metdata_gaps_using_soil_moisture_time_series(met_data_dict, soil_data_dict, minimum_pptn_rate, STA_LTA_threshold)
 
 
-gapfilled_met_data_dict = gapfill_metdata(met_data_dict,RS_data_dict,gaps)
+gapfilled_met_data = gap.gapfill_metdata(met_data_dict,RS_data_dict,gaps)
 
+SPAMetDir = './'#'/home/dmilodow/DataStore_DTM/BALI/SPA_BALI_data_and_analysis/SPA_input/met/'
+SPAMetName_RS = 'BALI_ERAinterim_TRMM_30mins_v1.csv'
+SPAMetName_local = 'BALI_gapfilled_met_station_30mins_v1.csv'
+
+gap.write_metdata_to_SPA_input(SPAMetDir,SPAMetName_local,gapfilled_met_data,gaps)
+
+# create list of zeros for gaps in RS data, since these records are continuous.
+gaps_RS = {}
+gap_vars = gaps.keys()
+N = RS_data_dict['date'].size
+for vv in range(0,len(gap_vars)):
+    gaps_RS[gap_vars[vv]]=np.zeros(N)
+
+gap.write_metdata_to_SPA_input(SPAMetDir,SPAMetName_RS,RS_data_dict,gaps_RS)
 
