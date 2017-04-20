@@ -145,22 +145,7 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
     soil_moisture_05cm[out_indices] = soil_data_host[data_i1:data_i2,6]
     soil_moisture_10cm[out_indices] = soil_data_host[data_i1:data_i2,7]
     soil_moisture_20cm[out_indices] = soil_data_host[data_i1:data_i2,8]
-    """
-    for tt in range(0,N_tsteps_out):
-        if output_time_series[tt] in dates_series:
-            index = dates_series == output_time_series[tt]
-            airT_station[tt] = met_data_host[index,0]
-            pptn_station[tt] = met_data_host[index,1]
-            rh_station[tt] = met_data_host[index,5]
-            PAR_station[tt] = met_data_host[index,3]
-            vpd_station[tt] = met_data_host[index,2]
-            BP_station[tt] = met_data_host[index,6]
-            swr_station[tt] = met_data_host[index,4]
 
-            soil_moisture_05cm[tt] = soil_data_host[index,6]
-            soil_moisture_10cm[tt] = soil_data_host[index,7]
-            soil_moisture_20cm[tt] = soil_data_host[index,8]
-    """
     # Second deal with RS data
     airT_RS = np.zeros(N_tsteps_out)*np.nan
     pptn_RS = np.zeros(N_tsteps_out)*np.nan
@@ -196,20 +181,7 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
     if TRMM_dates[-1]>output_time_series[-1]:
         data_i2 = data_indices[TRMM_dates==output_time_series[-1]][0]+1
     pptn_RS[out_indices] = TRMM_pptn[data_i1:data_i2]
-    """
-    for tt in range(0,N_tsteps_out):
-        if output_time_series[tt] in ERA_dates:
-            index = ERA_dates == output_time_series[tt]
-            airT_RS[tt] = airT_mod[index]
-            rh_RS[tt] = rh_mod[index]
-            PAR_RS[tt] = PAR_mod[index]
-            vpd_RS[tt] = vpd_mod[index]
-            BP_RS[tt] = sp_mod[index]
-            swr_RS[tt] = swr_mod[index]
-        if output_time_series[tt] in TRMM_dates:
-            index = TRMM_dates == output_time_series[tt]
-            pptn_RS[tt] = TRMM_pptn[index]
-    """
+
     #--------------------------------------------------------------------------------------------
     print "\t6 - transferring data into output dictionaries"
     # now put all arrays into dictionaries so it is easy to access later
@@ -336,9 +308,10 @@ def locate_metdata_gaps_using_soil_moisture_time_series(met_data, soil_data, min
     # now quickly deal with type one gaps - where data was not recorded at all
     for vv in range(0,N_vars):
         if met_vars[vv]!='date':
+            nodata_mask = np.isnan(met_data[met_vars[vv]])
             gaps[met_vars[vv]][nodata_mask]=1
 
-    plot_pptn_detection(met_data['date'], met_data['pptn'], soil_data['soil_moisture_05cm'],soil_data['soil_moisture_10cm'],soil_data['soil_moisture_20cm'], soil1_filt, soil2_filt, soil3_filt, gaps['pptn'])
+    #plot_pptn_detection(met_data['date'], met_data['pptn'], soil_data['soil_moisture_05cm'],soil_data['soil_moisture_10cm'],soil_data['soil_moisture_20cm'], soil1_filt, soil2_filt, soil3_filt, gaps['pptn'])
     return gaps
 
 # Simple function to find local maxima based on immediate neighbourhood
@@ -359,7 +332,7 @@ def gapfill_metdata(met_data,RS_data,gaps):
     for vv in range(0,N_vars):
         if met_variables[vv]!='date':
             gap_mask = gaps[met_variables[vv]]>0
-            met_data[met_variables[vv]][mask]=RS_data[met_variables[vv]][mask]
+            met_data[met_variables[vv]][gap_mask]=RS_data[met_variables[vv]][gap_mask]
     return met_data
 
 
@@ -390,8 +363,6 @@ def plot_pptn_detection(dates, pptn, soil1, soil2, soil3, soil1_STA_LTA, soil2_S
     ax1.plot(x_range,pptn,'-',color='#1E7581')
     ax1.fill_between(x_range, 0, 1, where=gaps == 2, facecolor='green', alpha=0.5,edgecolor='None', transform=trans)
     ax1.fill_between(x_range, 0, 1, where=gaps == 1, facecolor='red', alpha=0.5, edgecolor='None', transform=trans)
-    #ax1.fill_between(x_range,zero,type1_gap,color='orange', alpha = 0.2)
-    #ax1.fill_between(x_range,zero,type2_gap,color='red', alpha = 0.2)
     ax1.fill_between(x_range,zero,pptn,color='#1E7581')
     ax1.set_ylabel('precipitation / mm')
     #ax1.set_xlabel('Days since ' + start_date_str)
@@ -405,8 +376,6 @@ def plot_pptn_detection(dates, pptn, soil1, soil2, soil3, soil1_STA_LTA, soil2_S
     ax2.plot(x_range,soil3,'-',color='#006612')
     ax2.fill_between(x_range, 0, 1, where=gaps == 2, facecolor='green', alpha=0.5,edgecolor='None', transform=trans)
     ax2.fill_between(x_range, 0, 1, where=gaps == 1, facecolor='red', alpha=0.5, edgecolor='None', transform=trans)
-    #ax2.fill_between(x_range,zero,type1_gap,color='orange', alpha = 0.2)
-    #ax2.fill_between(x_range,zero,type2_gap,color='red', alpha = 0.2)
     ax2.set_ylabel('Volumetric soil moisture content')
     ax2.set_xlim(xmin=0,xmax=np.max(x_range))
     ax2.set_ylim(ymin=0,ymax=0.7)
@@ -425,4 +394,38 @@ def plot_pptn_detection(dates, pptn, soil1, soil2, soil3, soil1_STA_LTA, soil2_S
     plt.tight_layout(pad=2)
     plt.show()
 
+    return 0
+
+
+# Write some output files
+def write_metdata_to_SPA_input(MetDir,MetName,MetData,gaps,tstep_mins=30.):
+
+    out = open(MetDir+MetName,'w')
+    out.write('time_days, date, airt,wind_spd,sw_rad,vpd,ppfd,precip,sfc_pressure, gap_airt, gap_sw, gap_vpd, gap_ppfd, gap_pptn, gap_sfc_pressure\n')
+
+    N_timesteps = MetData['date'].size
+    tstep_days = tstep_mins/(60.*24.)
+    t=0
+    for i in range(0,N_timesteps):
+        t += tstep_days
+        out.write(str(t) + ',' + str(MetData['date'][i]) + ',' + str(MetData['airT'][i]) + ', 0.2,' + str(MetData['swr'][i]) + ',' + str(MetData['vpd'][i]) + ',' + str(MetData['PAR'][i]) + ',' + str(MetData['pptn'][i]) + ',' + str(MetData['BP'][i]) + ',' + str(gaps['airT'][i]) + ',' + str(gaps['swr'][i]) +  ',' + str(gaps['vpd'][i]) + ',' + str(gaps['PAR'][i]) + ',' + str(gaps['pptn'][i]) + ',' + str(gaps['BP'][i]) +'\n')
+
+    out.close()
+    return 0
+
+
+# Write some output files
+def write_metdata_to_CARDAMOM_input(MetDir,MetName,MetData):
+
+    out = open(MetDir+MetName,'w')
+    out.write('time_days, date, airt,wind_spd,sw_rad,vpd,ppfd,precip,sfc_pressure, gap_airt, gap_sw, gap_vpd, gap_ppfd, gap_pptn, gap_sfc_pressure\n')
+
+    N_timesteps = MetData['date'].size
+    tstep_days = tstep_mins/(60.*24.)
+    t=0
+    for i in range(0,N_timesteps):
+        t += tstep_days
+        out.write(str(t) + ',' + str(MetData['date'][i]) + ',' + str(MetData['airT'][i]) + ', 0.2,' + str(MetData['swr'][i]) + ',' + str(MetData['vpd'][i]) + ',' + str(MetData['PAR'][i]) + ',' + str(MetData['pptn'][i]) + ',' + str(MetData['BP'][i]) + ',' + str(gaps['airT'][i]) + ',' + str(gaps['swr'][i]) +  ',' + str(gaps['vpd'][i]) + ',' + str(gaps['PAR'][i]) + ',' + str(gaps['pptn'][i]) + ',' + str(gaps['BP'][i]) +'\n')
+
+    out.close()
     return 0
