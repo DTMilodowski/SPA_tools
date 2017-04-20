@@ -323,8 +323,6 @@ def find_maxima(signal_y, threshold=0):
             peak_present[i] = 1
     return peak_present
 
-
-
 # function to gapfill metdata using remote sensed data
 def gapfill_metdata(met_data,RS_data,gaps):
     met_variables = met_data.keys() 

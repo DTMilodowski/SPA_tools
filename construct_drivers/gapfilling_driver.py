@@ -32,6 +32,12 @@ end_date= '01/01/2016 00:00'
 
 met_data_dict, soil_data_dict, RS_data_dict = gap.load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_date)
 
+# remove swr and PAR record from station prior to 22/09/2012 as the sensor was behaving oddly
+mask = met_data_dict['date']<np.datetime64('2012-09-22 00:00','m')
+met_data_dict['PAR'][mask]=np.nan
+met_data_dict['swr'][mask]=np.nan 
+
+
 minimum_pptn_rate = 0.5
 STA_LTA_threshold = 4.
 gaps = gap.locate_metdata_gaps_using_soil_moisture_time_series(met_data_dict, soil_data_dict, minimum_pptn_rate, STA_LTA_threshold)
