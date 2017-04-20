@@ -19,7 +19,8 @@ sys.path.append('/home/dmilodow/DataStore_DTM/BALI/SPA_BALI_data_and_analysis/sc
 import met_setup as met
 import MODIS_setup as MODIS
 import field_data_setup as field
-
+sys.path.append('/home/dmilodow/DataStore_DTM/BALI/SPA_BALI_data_and_analysis/scripts/construct_drivers/')
+import gapfill_station_metdata as gap
 # First of all, define the relevant input files
 # MET DATA
 #    -ERA Interim
@@ -156,17 +157,71 @@ for pp in range(0,len(plot)):
 
 
     # write output to file
-    outfile_drivers = "CARDAMOM_met_drivers_"+plot[pp]+".csv"
-    out_drivers = open(outfile_drivers,'w')
-
     outfile_priors = "CARDAMOM_param_priors_"+plot[pp]+".csv"
     out_priors = open(outfile_priors,'w')
-
-    out_drivers.write('timestep_days, date, mn2t, mx2t, vpd, ssrd, pptn, mn2t_21d, mx2t_21d, vpd_21d, ssrd_21d, pptn_21d, LAI\n')
-    out_priors.write('timestep_days, date, Cwood, Croot, Csoil, LitterFlux, LitterFluxStd\n')
+    out_priors.write('timestep_days, date, Cwood, Croot, Csoil, LitterFlux, LitterFluxStd, LAI\n')
     for tt in range(0,N_t):
-        out_drivers.write(str(tt) + ',' + str(date[tt]) + ', ' + str(mn2t_in[tt]) + ',' + str(mx2t_in[tt]) + ',' + str(vpd_in[tt]) + ',' + str(ssrd_in[tt]) + ',' + str(pptn_in[tt]) + ',' + str(mn2t21_in[tt]) + ',' + str(mx2t21_in[tt]) + ',' + str(vpd21_in[tt]) + ',' + str(ssrd21_in[tt]) + ',' + str(pptn21_in[tt]) + ',' +    str(LAI[pp])  + '\n')
-        out_priors.write(str(tt) + ',' + str(date[tt]) + ', ' + str(Cwood_in[tt]) + ',' + str(Croot_in[tt]) + ',' + str(Csoil_in[tt]) + ',' + str(Litter_in[tt]) + ',' + str(Litter_std_in[tt]) + '\n')
+        out_priors.write(str(tt) + ',' + str(date[tt]) + ', ' + str(Cwood_in[tt]) + ',' + str(Croot_in[tt]) + ',' + str(Csoil_in[tt]) + ',' + str(Litter_in[tt]) + ',' + str(Litter_std_in[tt]) + ',' + str(LAI[pp]) + '\n')
     out_drivers.close()
     out_priors.close()
 
+# write met data to file
+outfile_drivers = "BALI_ERAinterim_TRMM_daily_v1.csv"
+out_drivers = open(outfile_drivers,'w')
+out_drivers.write('timestep_days, date, mn2t, mx2t, vpd, ssrd, pptn, mn2t_21d, mx2t_21d, vpd_21d, ssrd_21d, pptn_21d\n')
+for tt in range(0,N_t):
+    out_drivers.write(str(tt) + ',' + str(date[tt]) + ', ' + str(mn2t_in[tt]) + ',' + str(mx2t_in[tt]) + ',' + str(vpd_in[tt]) + ',' + str(ssrd_in[tt]) + ',' + str(pptn_in[tt]) + ',' + str(mn2t21_in[tt]) + ',' + str(mx2t21_in[tt]) + ',' + str(vpd21_in[tt]) + ',' + str(ssrd21_in[tt]) + ',' + str(pptn21_in[tt]) + '\n')
+
+#---------------------------------------------------------------------------------------------
+# now produce an equivalent met data file that utilises station data where possible.
+# Met station
+met_file  = '/home/dmilodow/DataStore_DTM/BALI/SAFE_data/SAFE_FluxTower_AtmMet_data.csv'
+soil_file  = '/home/dmilodow/DataStore_DTM/BALI/SAFE_data/SAFE_FluxTower_SoilMet_data.csv'
+start_date= '01/01/2011 00:00'
+end_date= '01/03/2016 00:00'
+met_data_dict, soil_data_dict, RS_data_dict = gap.load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_date)
+# remove swr and PAR record from station prior to 22/09/2012 as the sensor was behaving oddly
+mask = met_data_dict['date']<np.datetime64('2012-09-22 00:00','m')
+met_data_dict['PAR'][mask]=np.nan
+met_data_dict['swr'][mask]=np.nan 
+minimum_pptn_rate = 0.5
+STA_LTA_threshold = 4.
+gaps = gap.locate_metdata_gaps_using_soil_moisture_time_series(met_data_dict, soil_data_dict, minimum_pptn_rate, STA_LTA_threshold)
+gapfilled_met_data = gap.gapfill_metdata(met_data_dict,RS_data_dict,gaps)
+
+met_dates, mn2t, mx2t, vpd, ssrd, pptn = met.generate_daily_met_drivers_from_existing_halfhourly_time_series(met_data):
+mn2t_in = np.zeros(N_t)-9999.
+mx2t_in = np.zeros(N_t)-9999.
+vpd_in = np.zeros(N_t)-9999.
+ssrd_in = np.zeros(N_t)-9999.
+pptn_in = np.zeros(N_t)-9999.
+mn2t21_in = np.zeros(N_t)-9999.
+mx2t21_in = np.zeros(N_t)-9999.
+vpd21_in = np.zeros(N_t)-9999.
+ssrd21_in = np.zeros(N_t)-9999.
+pptn21_in = np.zeros(N_t)-9999.
+
+#--------------------------------
+N_m = met_dates.size
+for dd in range(0,N_m):
+    mn2t_in[date == met_dates[dd]] = mn2t[dd]
+    mx2t_in[date == met_dates[dd]] = mx2t[dd]
+    ssrd_in[date == met_dates[dd]] = ssrd[dd]
+    vpd_in[date == met_dates[dd]] = vpd[dd]
+    pptn_in[date == met_dates[dd]] = pptn[dd]
+
+# also get 21 day rolling average (retro-looking)
+mn2t21,mx2t21,ssrd21,vpd21,pptn21 = met.retro_rolling_average_met_data(mn2t,mx2t,ssrd,vpd,pptn)
+for dd in range(0,N_m):
+    mn2t21_in[date == met_dates[dd]] = mn2t21[dd]
+    mx2t21_in[date == met_dates[dd]] = mx2t21[dd]
+    ssrd21_in[date == met_dates[dd]] = ssrd21[dd]
+    vpd21_in[date == met_dates[dd]] = vpd21[dd]
+for dd in range(0,N_trmm):
+    pptn21_in[date == TRMM_dates[dd]] = pptn21[dd]
+# write met data to file
+outfile_drivers = "BALI_gapfilled_met_station_daily_v1.csv"
+out_drivers = open(outfile_drivers,'w')
+out_drivers.write('timestep_days, date, mn2t, mx2t, vpd, ssrd, pptn, mn2t_21d, mx2t_21d, vpd_21d, ssrd_21d, pptn_21d\n')
+for tt in range(0,N_t):
+    out_drivers.write(str(tt) + ',' + str(date[tt]) + ', ' + str(mn2t_in[tt]) + ',' + str(mx2t_in[tt]) + ',' + str(vpd_in[tt]) + ',' + str(ssrd_in[tt]) + ',' + str(pptn_in[tt]) + ',' + str(mn2t21_in[tt]) + ',' + str(mx2t21_in[tt]) + ',' + str(vpd21_in[tt]) + ',' + str(ssrd21_in[tt]) + ',' + str(pptn21_in[tt]) + '\n')
