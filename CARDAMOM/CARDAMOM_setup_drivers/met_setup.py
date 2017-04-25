@@ -142,7 +142,7 @@ def generate_daily_met_drivers_from_existing_halfhourly_time_series(met_data):
         start_fullday+=np.timedelta64(1,'D')
     
     end_fullday = met_data['date'][-1].astype('datetime64[D]')+np.timedelta64(1,'D')
-    ifmet_data['date'][-1]- met_data['date'][-1].astype('datetime64[D]').astype('datetime64[m]') != np.timedelta64(23*60+30,'m'):
+    if met_data['date'][-1]- met_data['date'][-1].astype('datetime64[D]').astype('datetime64[m]') != np.timedelta64(23*60+30,'m'):
         end_fullday -= np.timedelta64(1,'D')
 
     mask = np.all((met_data['date']>=start_fullday.astype('datetime64[m]'),met_data['date']<end_fullday.astype('datetime64[m]')),axis=0)
