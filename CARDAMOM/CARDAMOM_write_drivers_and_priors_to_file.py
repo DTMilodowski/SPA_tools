@@ -189,7 +189,7 @@ STA_LTA_threshold = 4.
 gaps = gap.locate_metdata_gaps_using_soil_moisture_time_series(met_data_dict, soil_data_dict, minimum_pptn_rate, STA_LTA_threshold)
 gapfilled_met_data = gap.gapfill_metdata(met_data_dict,RS_data_dict,gaps)
 
-met_dates, mn2t, mx2t, vpd, ssrd, pptn = met.generate_daily_met_drivers_from_existing_halfhourly_time_series(met_data):
+met_dates, mn2t, mx2t, vpd, ssrd, pptn = met.generate_daily_met_drivers_from_existing_halfhourly_time_series(gapfilled_met_data)
 mn2t_in = np.zeros(N_t)-9999.
 mx2t_in = np.zeros(N_t)-9999.
 vpd_in = np.zeros(N_t)-9999.
@@ -217,8 +217,7 @@ for dd in range(0,N_m):
     mx2t21_in[date == met_dates[dd]] = mx2t21[dd]
     ssrd21_in[date == met_dates[dd]] = ssrd21[dd]
     vpd21_in[date == met_dates[dd]] = vpd21[dd]
-for dd in range(0,N_trmm):
-    pptn21_in[date == TRMM_dates[dd]] = pptn21[dd]
+    pptn21_in[date == met_dates[dd]] = pptn21[dd]
 # write met data to file
 outfile_drivers = "BALI_gapfilled_met_station_daily_v1.csv"
 out_drivers = open(outfile_drivers,'w')
