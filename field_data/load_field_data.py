@@ -1076,7 +1076,7 @@ def collate_plot_level_census_data(census_file):
                     BasalArea[s,y]= np.pi*np.sum((DBHtemp[np.isfinite(DBHtemp)]/2)**2)   
                 else:
                     BasalArea[s,y]=np.nan
-        print "test"
+
         # now lets do the growth, mortality and recruitment
         for s in range(0,n_subplots):
             subplot_indices = plot_indices * Subplot==subplot_ids[s]
