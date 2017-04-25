@@ -1025,7 +1025,6 @@ def collate_tree_level_data(census_file,traits_file,branch_file,leaf_file):
     return TreeDict
 
 def collate_plot_level_census_data(census_file):
-
     BALI_plot, Subplot, CensusDates, TreeTag_census, AltTag, DPOM, HPOM, Height, C_stem, C_coarse_root, RAINFOR_flag, Alive_flag, Species, SubplotCoords, WoodDensity = read_ICP_census_data(census_file)
 
     plot_names = np.unique(BALI_plot)
@@ -1077,11 +1076,11 @@ def collate_plot_level_census_data(census_file):
                     BasalArea[s,y]= np.pi*np.sum((DBHtemp[np.isfinite(DBHtemp)]/2)**2)   
                 else:
                     BasalArea[s,y]=np.nan
-
+        print "test"
         # now lets do the growth, mortality and recruitment
         for s in range(0,n_subplots):
             subplot_indices = plot_indices * Subplot==subplot_ids[s]
-            Cwood_temp = C_stem[subplot_indices]+Croot[subplot_indices]
+            Cwood_temp = C_stem[subplot_indices]+C_coarse_root[subplot_indices]            
             for y in range(1,3):
                 growth_indices = np.all((np.isfinite(Cwood_temp[:,y-1]),np.isfinite(Cwood_temp[:,y])),axis=0)
                 recruit_indices = np.all((np.isfinite(Cwood_temp[:,y]),~np.isfinite(Cwood_temp[:,y-1])),axis=0)
