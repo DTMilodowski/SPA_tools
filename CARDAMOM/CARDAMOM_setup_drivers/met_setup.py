@@ -133,8 +133,6 @@ def generate_daily_met_drivers_local_station(met_file):
 def generate_daily_met_drivers_from_existing_halfhourly_time_series(met_data):
     earliest_day = np.min(met_data['date'])
     latest_day = np.max(met_data['date'])
-        
-    met_data['swr']=met_data['swr']*60.*30. # convert half hourly average Wm^-2 to cumulative Jm^-2 
 
     # clip time series so that ends are trimmed to full days
     start_fullday=met_data['date'][0].astype('datetime64[D]')
@@ -150,7 +148,12 @@ def generate_daily_met_drivers_from_existing_halfhourly_time_series(met_data):
     met_data_clipped = {}
     var=met_data.keys()
     for vv in range(0,len(var)):
-        met_data_clipped[var[vv]]=met_data[var[vv]][mask]
+        if var[vv]=='swr':
+            met_data_clipped[var[vv]]=met_data[var[vv]][mask]*30.*60. # convert W/m2 to J/m2
+            
+        else:
+            met_data_clipped[var[vv]]=met_data[var[vv]][mask]
+        
     met_days = np.arange(start_fullday,end_fullday,dtype='datetime64[D]')
     n_days=met_days.size
 
