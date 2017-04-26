@@ -1641,6 +1641,40 @@ def get_allocation_fractions(census_file,traits_file,branch_file,leaf_file,lai_f
     return 0
 
 
+def load_LAI_time_series(LAI_file):
+    datatype = {'names': ('ForestType', 'Plot', 'Date', 'Subplot', 'SkyConditions', 'Exposure', 'LAI', 'Remarks', 'Qflag', 'Qreason'), 'formats': ('S16','S16','S10','i8','S16','i8','f16','S64','i8','S64')}
+    LAI_data = np.genfromtxt(LAI_file, skiprows = 1, delimiter = ',',dtype=datatype)
+
+    plot_names = np.unique(LAI_data['Plot'])
+    N_plots = plot_names.size
+    plot_dict = {}
+    for pp in range(0,N_plots):
+        LAI_dict = {}
+        plot_data = LAI_data[LAI_data['Plot']==plots_names[pp]]
+
+        # set up some arrays for data output
+        date_str = np.unique(plot_data['Date'])
+        N_dates = date_str.size
+        N_subplots = np.unique(plot_data['Subplot'])
+
+        LAI = np.zeros((N_dates,N_subplots))
+        dates = np.zeros(N_dates,dtype = 'datetime64[D]')
+        for dd in range(0,N_dates):
+            day,month,year = dates_str.split("/")
+            dates[dd] = np.datetime64(year+'-'+month+'-'+day)
+            for ss in range(0,N_subplots):
+                index=np.all((plot_data['Date']==date_str[dd],plot_data['Subplot']==ss+1,plot_data['Exposure']==2,plot_data['Qflag']==1),axis=0)
+                if np.sum(index)>0:
+                    LAI[dd,ss] = plot_data['LAI'][index][0]
+                else:
+                    LAI[dd,ss] = np.nan
+
+        LAI_dict['date']=dates.copy()
+        LAI_dict['LAI']=LAI.copy()
+        plot_dict[plot_names[pp]]=LAI_dict    
+    return plot_dict
+
+
 
 if __name__ == "__main__":
     census_file = '/home/dmilodow/DataStore_DTM/BALI/BALI_Cplot_data/SAFE_CarbonPlots_TreeCensus.csv'
