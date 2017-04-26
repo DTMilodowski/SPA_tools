@@ -24,7 +24,8 @@ leaf_traits_file = 'BALI_leaf_traits.csv'
 
 data = pd.read_csv(leaf_traits_file)
 
-md = smf.mixedlm("Weight ~ Time", data, groups=data["Pig"])
+indices = np.all((np.isfinite(data['Vcmax']),np.isfinite(data['Narea'])),axis =0)
+md = smf.mixedlm("Vcmax ~ Narea", data[indices], groups=data[indices]["spp"])
 mdf = md.fit()
 
 
