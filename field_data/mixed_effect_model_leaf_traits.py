@@ -16,6 +16,13 @@ rcParams['font.size'] = 8
 rcParams['legend.numpoints'] = 1
 axis_size = rcParams['font.size']+2
 
+
+# define a function to normalise a dataset so that mean in zero and standard deviation is one. 
+# This allows easier comparison of effect size
+def normalise_column(pd_column):
+    pd_column = (pd_column-pd_column.mean())/pd_column.std()
+    return pd_column
+
 # traits file
 leaf_traits_file = 'BALI_leaf_traits.csv'
 
@@ -24,10 +31,18 @@ leaf_traits_file = 'BALI_leaf_traits.csv'
 
 data = pd.read_csv(leaf_traits_file)
 
-data_norm = (data - data.mean())/(data.std())
-
 indices = np.all((np.isfinite(data['Vcmax']),np.isfinite(data['Narea'])),axis =0)
-md = smf.mixedlm("Vcmax ~ Narea", data[indices], groups=data[indices]["spp"])
+
+# extract subset of data containing data values for variables of interest 
+data_sub = data[indices].copy()
+
+# scale the data columns that you are going to use so that mean = 0 and standard deviation =1
+variables_to_use  = ['Vcmax', 'Narea','Carea','leaf_height','light_availability','Rd']
+for vv in range(0,len(variables_to_use)):
+    normalise_column(data_sub[variables_to_use[vv]])
+
+
+md = smf.mixedlm("Vcmax ~ Narea", data_norm[indices], groups=data_norm[indices]["spp"])
 mdf = md.fit()
 
 
