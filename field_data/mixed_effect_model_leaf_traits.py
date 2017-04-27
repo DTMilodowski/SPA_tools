@@ -80,5 +80,5 @@ groups = "spp"
 
 # run model
 md, mdf = run_mixed_effects_model(data,variables_to_use,model,groups)
-md, mdf = run_ols_model(data,variables_to_use,model,groups)
+md, mdf = run_ols_model(data,variables_to_use,model)
 
