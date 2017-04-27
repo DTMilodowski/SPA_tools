@@ -39,10 +39,11 @@ data_sub = data[indices].copy()
 # scale the data columns that you are going to use so that mean = 0 and standard deviation =1
 variables_to_use  = ['Vcmax', 'Narea','Carea','leaf_height','light_availability','Rd']
 for vv in range(0,len(variables_to_use)):
-    normalise_column(data_sub[variables_to_use[vv]])
+    print variables_to_use[vv]
+    data_sub[variables_to_use[vv]]=normalise_column(data_sub[variables_to_use[vv]])
 
 
-md = smf.mixedlm("Vcmax ~ Narea", data_norm[indices], groups=data_norm[indices]["spp"])
+md = smf.mixedlm("Vcmax ~ Narea", data[indices], groups=data[indices]["spp"])
 mdf = md.fit()
 
 
