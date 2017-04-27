@@ -49,7 +49,7 @@ def run_mixed_effects_model(data,variables_to_use,model,group_vars):
     return md,mdf
 
 # run simple linear model
-def run_ols(data,variables_to_use,model):
+def run_ols_model(data,variables_to_use,model):
     indices = mask_nodata(data,variables_to_use)
     data_sub = data[indices].copy()
 
@@ -80,37 +80,5 @@ groups = "spp"
 
 # run model
 md, mdf = run_mixed_effects_model(data,variables_to_use,model,groups)
-
-
-
-
-
-
-
-
-indices = mask_nodata(data,variables_to_use)
-data_sub = data[indices].copy()
-
-
-
-
-
-
-
-
-# scale the data columns that you are going to use so that mean = 0 and standard deviation =1
-for vv in range(0,len(variables_to_use)):
-    print variables_to_use[vv]
-    data_sub[variables_to_use[vv]]=normalise_column(data_sub[variables_to_use[vv]])
-
-
-md = smf.mixedlm("Rd ~ Narea+leaf_height+light_availability", data[indices], groups=data[indices]["spp"])
-mdf = md.fit()
-mdf.summary()
-
-run_mixed_effects_model(data,variables_to_use,model,groups=data[indices]["spp"])
-
-# simple linear model, no categoricals
-md = smf.ols("Rd ~ Narea+leaf_height+light_availability", data[indices])
-mdf = md.fit()
+md, mdf = run_ols_model(data,variables_to_use,model,groups)
 
