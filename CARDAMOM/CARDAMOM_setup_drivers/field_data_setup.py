@@ -53,7 +53,7 @@ def get_Croot_ts(roots_file,plot):
             Croot_std.append(np.std(rootStocks[plot]['FineRootStocks'][jj,i]))
         
     return np.asarray(collection_dates), np.asarray(Croot), np.asarray(Croot_std)
-    
+"""
 # Get time series of litter fall
 def get_litterfall_ts(litter_file,plot):
     
@@ -74,7 +74,37 @@ def get_litterfall_ts(litter_file,plot):
         else:
             litter_fall.append(np.nan)
             litter_std.append(np.nan)
+
     return np.asarray(collection_dates), np.asarray(previous_collection_dates), np.asarray(litter_fall), np.asarray(litter_std)
+"""
+def get_litterfall_ts(litter_file,plot):
+    
+    litter = field.read_litterfall_data(litter_file)
+    N_sp,N_dates = litter[plot]['rTotal'].shape
+    
+    collection = []
+    previous_collection = []
+    for i in range(0,N_dates):
+        collection.append(np.max(litter[plot]['CollectionDate'][:,i]))
+        previous_collection.append(np.max(litter[plot]['PreviousCollectionDate'][:,i]))
+
+    collection_dates = np.asarray(collection)
+    previous_collection_dates = np.asarray(previous_collection)
+    interval = np.asarray(collection_dates-previous_collection_dates,dtype='float')
+    
+    litter_gapfilled = np.zeros((N_sp,N_dates))
+    for ss in range(0,N_sp):
+        mask = np.isfinite(litter[plot]['LAI'][ss,:])
+        interval_nogaps = np.asarray(interval[mask],dtype='float')
+        litter_nogaps = litter[plot]['LAI'][ss,mask]
+        
+        f = interp1d(interval_nogaps, litter_nogaps, kind='cubic')  # without specifying "kind", default is linear
+
+        litter_gapfilled[ss,:] = f(interval)
+    
+    litter_plot_ts = np.mean(litter_gapfilled,axis=0)
+    litter_fall_std = np.std(litter_gapfilled,axis=0)
+    return collection_dates, previous_collection_dates, litter_fall_ts, litter_fall_std
 
 
 # Get time series of LAI using spline interpolation to fill the gaps
@@ -84,15 +114,16 @@ def get_LAI_ts(LAI_file,plot):
     interval = np.zeros(N_dates,'timedelta64[D]')
     interval[1:] = LAI[plot]['date'][1:]-LAI[plot]['date'][:-1]
 
-    LAI_gapfilled = np.zeros((N_dates,N_sp))
+    LAI_gapfilled = np.zeros((N_sp,N_dates))
     for ss in range(0,N_sp):
-        mask = np.isfinite(LAI[plot]['LAI'][:,ss])
+        mask = np.isfinite(LAI[plot]['LAI'][ss,:])
         interval_nogaps = np.asarray(interval[mask],dtype='float')
 
-        LAI_nogaps = LAI[plot]['LAI'][mask,ss]
+        LAI_nogaps = LAI[plot]['LAI'][ss,mask]
 
-        f = interp1d(interval_nogaps, LAI_nogaps, kind='cubic')  # without specifying "kind", default is linear"
-        LAI_gapfilled[:,ss] = f(interval)
+        f = interp1d(interval_nogaps, LAI_nogaps, kind='cubic')  # without specifying "kind", default is linear
+        LAI_gapfilled[ss,:] = f(interval)
 
-    LAI_plot_ts = np.mean(LAI_gapfilled,axis=1)
+    LAI_plot_ts = np.mean(LAI_gapfilled,axis=0)
     return  LAI[plot]['date'], LAI_plot_ts
+
