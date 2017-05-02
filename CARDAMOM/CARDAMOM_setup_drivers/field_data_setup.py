@@ -36,6 +36,7 @@ def get_root_NPP_ts(roots_file,plot):
     
 
 # Get time series of fine root carbon
+"""
 def get_Croot_ts(roots_file,plot):
     rootStocks,rootNPP = field.read_soil_stocks_and_npp(roots_file)
     N_collections = rootStocks[plot]['FineRootStocks'].shape[1]
@@ -53,6 +54,39 @@ def get_Croot_ts(roots_file,plot):
             Croot_std.append(np.std(rootStocks[plot]['FineRootStocks'][jj,i]))
         
     return np.asarray(collection_dates), np.asarray(Croot), np.asarray(Croot_std)
+"""
+def get_Croot_ts(roots_file,plot):
+
+    rootStocks,rootNPP = field.read_soil_stocks_and_npp(roots_file)
+    N_sp,N_collections = rootStocks[plot]['FineRootStocks'].shape
+    collection = []
+    for i in range(0,N_collections):
+        # check that there is a collection this year
+        if np.max(rootStocks[plot]['CollectionDate'][:,i])>np.datetime64('2000-01-01'):
+            collection.append(np.max(rootStocks[plot]['CollectionDate'][:,i]))
+
+    collection_dates = np.asarray(collection)
+    N_dates = collection_dates.size
+    interval = np.zeros(N_dates)
+    interval[1:] = interval[1:]-interval[:-1]
+    
+    Croot_gapfilled = np.zeros((N_sp,N_dates))
+
+    for ss in range(0,N_sp):
+        mask = np.isfinite(rootStocks[plot]['FineRootStocks'][ss,:])
+        interval_nogaps = np.asarray(interval[mask],dtype='float')
+        Croot_nogaps = litter[plot]['LAI'][ss,mask]
+        
+        f = interp1d(interval_nogaps, Croot_nogaps, kind='cubic')  # without specifying "kind", default is linear
+
+        Croot_gapfilled[ss,:] = f(interval)
+    
+    Croot_plot_ts = np.mean(Croot_gapfilled,axis=0)
+    Croot_std = np.std(Croot_gapfilled,axis=0)
+    return collection_dates, Croot_plot_ts, Croot_std
+
+
+
 """
 # Get time series of litter fall
 def get_litterfall_ts(litter_file,plot):
