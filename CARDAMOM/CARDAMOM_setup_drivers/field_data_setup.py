@@ -5,6 +5,7 @@ sys.path.append('../field_data/')
 
 import load_field_data as field
 
+from scipy.interpolate import interp1d
 
 # Get time series of woody biomass
 def get_Cwood_ts(census_file,plot):
@@ -74,3 +75,24 @@ def get_litterfall_ts(litter_file,plot):
             litter_fall.append(np.nan)
             litter_std.append(np.nan)
     return np.asarray(collection_dates), np.asarray(previous_collection_dates), np.asarray(litter_fall), np.asarray(litter_std)
+
+
+# Get time series of LAI using spline interpolation to fill the gaps
+def get_LAI_ts(LAI_file,plot):
+    LAI = field.load_LAI_time_series(LAI_file)
+    N_dates, N_sp = LAI[plot]['LAI'].shape
+    interval = np.zeros(N_dates,'timedelta64[D]')
+    interval[1:] = LAI[plot]['date'][1:]-LAI[plot]['date'][:-1]
+
+    LAI_gapfilled = np.zeros((N_dates,N_sp))
+    for ss in range(0,N_sp):
+        mask = np.isfinite(LAI[plot]['LAI'][:,ss])
+        interval_nogaps = np.asarray(interval[mask],dtype='float')
+
+        LAI_nogaps = LAI[plot]['LAI'][mask,ss]
+
+        f = interp1d(interval_nogaps, LAI_nogaps, kind='cubic')  # without specifying "kind", default is linear"
+        LAI_gapfilled[:,ss] = f(interval)
+
+    LAI_plot_ts = np.mean(LAI_gapfilled,axis=1)
+    return  LAI[plot]['date'], LAI_plot_ts
