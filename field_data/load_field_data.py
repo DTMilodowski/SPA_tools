@@ -1657,7 +1657,7 @@ def load_LAI_time_series(LAI_file):
         N_dates = date_str.size
         N_subplots = np.unique(plot_data['Subplot'])
 
-        LAI = np.zeros((N_dates,N_subplots))
+        LAI = np.zeros((N_subplots,N_dates))
         dates = np.zeros(N_dates,dtype = 'datetime64[D]')
         for dd in range(0,N_dates):
             day,month,year = dates_str.split("/")
@@ -1665,9 +1665,9 @@ def load_LAI_time_series(LAI_file):
             for ss in range(0,N_subplots):
                 index=np.all((plot_data['Date']==date_str[dd],plot_data['Subplot']==ss+1,plot_data['Exposure']==2,plot_data['Qflag']==1),axis=0)
                 if np.sum(index)>0:
-                    LAI[dd,ss] = plot_data['LAI'][index][0]
+                    LAI[ss,dd] = plot_data['LAI'][index][0]
                 else:
-                    LAI[dd,ss] = np.nan
+                    LAI[ss,dd] = np.nan
 
         LAI_dict['date']=dates.copy()
         LAI_dict['LAI']=LAI.copy()
