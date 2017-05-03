@@ -1371,69 +1371,67 @@ def read_soil_stocks_and_npp(roots_file):
         N_cores = np.max(np.unique(roots_data['Core']))
         StocksDict = {}
         NPPDict = {}
-        CollectionDates = np.zeros((N_cores,20),dtype='datetime64[D]')#[]
-        PreviousDates = np.zeros((N_cores,20),dtype='datetime64[D]')#[]
-        AccumulationDays = np.zeros((N_cores,20))*np.nan
-        StocksDates = np.zeros((N_cores,20),dtype='datetime64[D]')#[]
-        FineRootsNPP = np.zeros((N_cores,20))*np.nan#[]
-        CoarseRootsNPP = np.zeros((N_cores,20))*np.nan#[]
-        TotalRootsNPP = np.zeros((N_cores,20))*np.nan#[]
-        FineRootsStocks = np.zeros((N_cores,20))*np.nan#[]
-        CoarseRootsStocks =np.zeros((N_cores,20))*np.nan# []
-        TotalRootsStocks = np.zeros((N_cores,20))*np.nan#[]
+
         # First do stocks
-        for j in range(0,N_cores):
-            core_data = Stocks_data[Stocks_data['Core']==j+1]
+        cDates = np.unique(Stocks_data['CollectionDate'])
+        N_stocks = cDates.size
+        StocksDates = np.zeros(N_stocks,dtype='datetime64[D]')
+        for dd in range(0,N_stocks):
+            day,month,year = cDates[dd].split("/")
+            StocksDates[dd]= np.datetime64(year+'-'+month+'-'+day)
+
+        StocksDates = np.sort(StocksDates)
+
+        FineRootsStocks = np.zeros((N_cores,N_stocks))*np.nan
+        CoarseRootsStocks =np.zeros((N_cores,N_stocks))*np.nan
+
+        for cc in range(0,N_cores):
+            core_data = Stocks_data[Stocks_data['Core']==cc+1]
             N_collections = core_data.size
-            cDates = np.zeros(N_collections, dtype = 'datetime64[D]')
 
-            #CoarseRootsStocks.append(core_data['CoarseRoots'])
-            CoarseRootsStocks[j,0:core_data['CoarseRoots'].size]=core_data['CoarseRoots']
-            #FineRootsStocks.append(core_data['FineRoots'])
-            #TotalRootsStocks.append(core_data['CoarseRoots'] + core_data['FineRoots'])
-            FineRootsStocks[j,0:core_data['FineRoots'].size]=core_data['FineRoots']
-            TotalRootsStocks[j,0:core_data['FineRoots'].size]=core_data['CoarseRoots'] + core_data['FineRoots']
-            
-            for k in range(0, N_collections):
-                day,month,year = core_data['CollectionDate'][k].split("/")
-                cDates[k]= np.datetime64(year+'-'+month+'-'+day)
-
-            StocksDates[j,0:cDates.size]=cDates#.append(cDates)
+            for kk in range(0, N_collections):
+                day,month,year = core_data['CollectionDate'][kk].split("/") 
+                dd = (StocksDates == np.datetime64(year+'-'+month+'-'+day))
+                CoarseRootsStocks[cc,dd] = core_data['CoarseRoots'][kk]
+                FineRootsStocks[cc,dd] = core_data['FineRoots'][kk]
 
         StocksDict['N_Cores']=N_cores
         StocksDict['CollectionDate']=StocksDates
         StocksDict['CoarseRootStocks']=CoarseRootsStocks
         StocksDict['FineRootStocks']=FineRootsStocks
-        StocksDict['TotalRootStocks']=TotalRootsStocks
+        StocksDict['Mask'] = np.isfinite(FineRootsStocks)
+
+
         # Next do NPP
-        for j in range(0,N_cores):
-            core_data = NPP_data[NPP_data['Core']==j+1]
+        cDates = np.unique(NPP_data['CollectionDate'])
+        N_NPP = cDates.size
+        CollectionDates = np.zeros(N_NPP,dtype='datetime64[D]')
+        for dd in range(0,N_NPP):
+            day,month,year = cDates[dd].split("/")
+            CollectionDates[dd]= np.datetime64(year+'-'+month+'-'+day)
+
+        CollectionDates = np.sort(CollectionDates)
+        PreviousDates = np.zeros((N_cores,N_NPP),dtype='datetime64[D]')
+        AccumulationDays = np.zeros((N_cores,N_NPP))*np.nan
+        FineRootsNPP = np.zeros((N_cores,N_NPP))*np.nan
+        CoarseRootsNPP = np.zeros((N_cores,N_NPP))*np.nan
+
+        for cc in range(0,N_cores):
+            core_data = NPP_data[NPP_data['Core']==cc+1]
             N_collections = core_data.size
-            cDates = np.zeros(N_collections, dtype = 'datetime64[D]')
-            pDates = np.zeros(N_collections, dtype = 'datetime64[D]')
 
-            #AccumulationDays.append(core_data['AccumulationDays'])
-            AccumulationDays[j,0:core_data['AccumulationDays'].size]=core_data['AccumulationDays']
-            #CoarseRootsNPP.append(core_data['CoarseRoots'])
-            #FineRootsNPP.append(core_data['FineRoots'])
-            #TotalRootsNPP.append(core_data['CoarseRoots'] + core_data['FineRoots'])
-            CoarseRootsNPP[j,0:core_data['CoarseRoots'].size]=core_data['CoarseRoots']
-            FineRootsNPP[j,0:core_data['FineRoots'].size]=core_data['FineRoots']
-            TotalRootsNPP[j,0:core_data['FineRoots'].size]=core_data['CoarseRoots'] + core_data['FineRoots']
-            
-            for k in range(0, N_collections):
-                day,month,year = core_data['CollectionDate'][k].split("/")
-                cDates[k]= np.datetime64(year+'-'+month+'-'+day)
-                if len(core_data['PreviousCollectionDate'][k])==0:
-                    pDates[k]= np.datetime64(0,'D')
+            for kk in range(0, N_collections):
+                day,month,year = core_data['CollectionDate'][kk].split("/")
+                dd = (CollectionDates == np.datetime64(year+'-'+month+'-'+day))
+                
+                if len(core_data['PreviousCollectionDate'][kk])==0:
+                    PreviousDates[cc,dd]= np.datetime64(0,'D')
                 else:
-                    day,month,year = core_data['PreviousCollectionDate'][k].split("/")
-                    pDates[k]= np.datetime64(year+'-'+month+'-'+day)
-
-            #CollectionDates.append(cDates)
-            CollectionDates[j,0:cDates.size]=cDates#.append(cDates)
-            #PreviousDates.append(pDates)
-            PreviousDates[j,0:pDates.size]=pDates#.append(cDates)
+                    pday,pmonth,pyear = core_data['PreviousCollectionDate'][kk].split("/")            
+                    PreviousDates[cc,dd]= np.datetime64(pyear+'-'+pmonth+'-'+pday)
+                    AccumulationDays[cc,dd]=core_data['AccumulationDays'][kk]
+                    CoarseRootsNPP[cc,dd]=core_data['CoarseRoots'][kk]
+                    FineRootsNPP[cc,dd]=core_data['FineRoots'][kk]
 
         NPPDict['N_Cores']=N_cores
         NPPDict['CollectionDate']=CollectionDates
@@ -1441,12 +1439,15 @@ def read_soil_stocks_and_npp(roots_file):
         NPPDict['AccumulationDays']=AccumulationDays
         NPPDict['CoarseRootNPP']=CoarseRootsNPP
         NPPDict['FineRootNPP']=FineRootsNPP
-        NPPDict['TotalRootNPP']=TotalRootsNPP
+        NPPDict['Mask'] = np.isfinite(FineRootsNPP)
 
         RootStocksDict[plot_names[i]]=StocksDict
         RootNPPDict[plot_names[i]]=NPPDict
 
     return RootStocksDict,RootNPPDict
+
+
+
 
 def write_leaf_traits_to_file(census_file,traits_file,branch_file,leaf_file):
 
