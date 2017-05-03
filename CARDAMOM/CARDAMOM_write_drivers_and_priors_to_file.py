@@ -39,6 +39,7 @@ TRMM_file = '/home/dmilodow/DataStore_DTM/BALI/MetDataProcessing/TRMM/g4.areaAvg
 census_file = '/home/dmilodow/DataStore_DTM/BALI/BALI_Cplot_data/SAFE_CarbonPlots_TreeCensus.csv'
 roots_file = '/home/dmilodow/DataStore_DTM/BALI/BALI_Cplot_data/SAFE_CarbonPlots_FineRoots_Stock_NPP_RawData.csv'
 litter_file = '/home/dmilodow/DataStore_DTM/BALI/BALI_Cplot_data/SAFE_CarbonPlots_Litterfall_RawData.csv'
+LAI_file = '/home/dmilodow/DataStore_DTM/BALI/BALI_Cplot_data/SAFE_CarbonPlots_LAI_fromHemisphericalPhotos_TimeSeries.csv'
 
 #---------------------------------------------------------------------------------------------------------------
 # Now get some basic parameters for the run
@@ -103,11 +104,17 @@ for pp in range(0,len(plot)):
     Croot_in = np.zeros(N_t)-9999.
     Csoil_in = np.zeros(N_t)-9999.
     Litter_in = np.zeros(N_t)-9999.
-    Litter_std_in = np.zeros(N_t)-9999.
+    Litter_in = np.zeros(N_t)-9999.
+    LAI_std_in = np.zeros(N_t)-9999.
+    LAI_std_in = np.zeros(N_t)-9999.
 
-    #LAI_in = np.zeros(N_t)-9999.
-    #LAI_std_in = np.zeros(N_t)-9999.
-    
+
+    # LAI data
+    LAI_date, LAI = field.get_LAI_ts(LAI_file,plot)
+    N_LAI = LAI_date.size
+    for tt in range(0,N_LAI):
+        LAI_in[date==LAI_date[tt]] = LAI[tt]
+
     # soil carbon reported in g/m2
     Csoil_in[0] = Csoil[pp]
 
@@ -124,16 +131,13 @@ for pp in range(0,len(plot)):
     for dd in range(0,N_r):
         Croot_in[date == root_stock_date[dd]] = Croot[dd]*10**6/10.**4 # convert Mg/ha to g/m^2
     
-        # litter fluxes reported in Mg/ha/yr
+    # litter fluxes reported in Mg/ha/yr
     litter_collection_date, litter_previous_collection_date, litter_flux, litter_std = field.get_litterfall_ts(litter_file,plot[pp])
 
     # Initially assume average flux rates for litter between collection dates 
     N_lit=litter_flux.size
     for tt in range(0,N_lit):
         indices = np.all((date>=litter_previous_collection_date[tt], date<litter_collection_date[tt]),axis=0)
-        n_days = np.float((litter_collection_date[tt]-litter_previous_collection_date[tt])/ np.timedelta64(1, 'D'))
-        #Litter_in[indices]= litter_flux[tt]/n_days * (10.**6/10.**4/365.25) # convert Mg/ha/yr to g/m2/d
-        #Litter_std_in[indices]= litter_std[tt]/n_days * (10.**6/10.**4/365.25) # convert Mg/ha/yr to g/m2/d
         Litter_in[indices]= litter_flux[tt] * (10.**6/10.**4/365.25) # convert Mg/ha/yr to g/m2/d
         Litter_std_in[indices]= litter_std[tt] * (10.**6/10.**4/365.25) # convert Mg/ha/yr to g/m2/d
         
@@ -161,7 +165,7 @@ for pp in range(0,len(plot)):
     out_priors = open(outfile_priors,'w')
     out_priors.write('timestep_days, date, Cwood, Croot, Csoil, LitterFlux, LitterFluxStd, LAI\n')
     for tt in range(0,N_t):
-        out_priors.write(str(tt) + ',' + str(date[tt]) + ', ' + str(Cwood_in[tt]) + ',' + str(Croot_in[tt]) + ',' + str(Csoil_in[tt]) + ',' + str(Litter_in[tt]) + ',' + str(Litter_std_in[tt]) + ',' + str(LAI[pp]) + '\n')
+        out_priors.write(str(tt) + ',' + str(date[tt]) + ', ' + str(Cwood_in[tt]) + ',' + str(Croot_in[tt]) + ',' + str(Csoil_in[tt]) + ',' + str(Litter_in[tt]) + ',' + str(Litter_std_in[tt]) + ',' + str(LAI[tt]) + '\n')
     out_drivers.close()
     out_priors.close()
 
