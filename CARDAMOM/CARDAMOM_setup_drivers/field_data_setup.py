@@ -66,31 +66,6 @@ def get_Croot(roots_file,plot):
     collection_date = rootStocks[plot]['CollectionDate'][0]
     return collection_date, Croot_plot, Croot_std
 
-
-"""
-# Get time series of litter fall
-def get_litterfall_ts(litter_file,plot):
-    
-    litter = field.read_litterfall_data(litter_file)
-    collection_dates = []
-    previous_collection_dates = []
-    litter_fall = []
-    litter_std = []
-    for i in range(0,litter[plot]['rTotal'].shape[1]):
-        collection_dates.append(np.max(litter[plot]['CollectionDate'][:,i]))
-        previous_collection_dates.append(np.max(litter[plot]['PreviousCollectionDate'][:,i]))
-        
-        # avoid nodata for missing/destroyed traps
-        jj = np.isfinite(litter[plot]['rTotal'][:,i])
-        if jj.sum()>0:
-            litter_fall.append(np.mean(litter[plot]['rTotal'][jj,i]))
-            litter_std.append(np.std(litter[plot]['rTotal'][jj,i]))
-        else:
-            litter_fall.append(np.nan)
-            litter_std.append(np.nan)
-
-    return np.asarray(collection_dates), np.asarray(previous_collection_dates), np.asarray(litter_fall), np.asarray(litter_std)
-"""
 def get_litterfall_ts(litter_file,plot):
     
     litter = field.read_litterfall_data(litter_file)
