@@ -95,29 +95,29 @@ def get_litterfall_ts(litter_file,plot):
     
     litter = field.read_litterfall_data(litter_file)
     N_sp,N_dates = litter[plot]['rTotal'].shape
-    
-    collection = []
-    previous_collection = []
-    for i in range(0,N_dates):
-        collection.append(np.max(litter[plot]['CollectionDate'][:,i]))
-        previous_collection.append(np.max(litter[plot]['PreviousCollectionDate'][:,i]))
 
-    collection_dates = np.asarray(collection)
-    previous_collection_dates = np.asarray(previous_collection)
-    interval = np.asarray(collection_dates-previous_collection_dates,dtype='float')
+    collection_dates = np.max(litter[plot]['CollectionDate'],axis=0)
+    previous_collection_dates = np.max(litter[plot]['PreviousCollectionDate'],axis=0)
+
+    interval = np.asarray(collection_dates-previous_collection_dates,dtype='float64')
+    days = np.cumsum(interval)
     
     litter_gapfilled = np.zeros((N_sp,N_dates))
     for ss in range(0,N_sp):
-        mask = np.isfinite(litter[plot]['LAI'][ss,:])
-        interval_nogaps = np.asarray(interval[mask],dtype='float')
-        litter_nogaps = litter[plot]['LAI'][ss,mask]
+        mask = np.isfinite(litter[plot]['rTotal'][ss,:])
+        print ss+1, np.isnan(litter[plot]['rTotal'][ss,:]).sum()
+        days_nogaps = np.asarray(days[mask],dtype='float64')
+        litter_nogaps = np.asarray(litter[plot]['rTotal'][ss,mask],dtype='float64')
         
-        f = interp1d(interval_nogaps, litter_nogaps, kind='cubic')  # without specifying "kind", default is linear
+        f = interp1d(days_nogaps, litter_nogaps, kind='linear')  # without specifying "kind", default is linear
 
-        litter_gapfilled[ss,:] = f(interval)
-    
+        litter_gapfilled[ss,:] = f(days)
+
+    litter_gapfilled[litter_gapfilled<0]=0
+
     litter_plot_ts = np.mean(litter_gapfilled,axis=0)
     litter_fall_std = np.std(litter_gapfilled,axis=0)
+
     return collection_dates, previous_collection_dates, litter_fall_ts, litter_fall_std
 
 
