@@ -1239,7 +1239,6 @@ def read_litterfall_data(litter_file):
             
             cDates = np.zeros(N_collections, dtype = 'datetime64[D]')
             pDates = np.zeros(N_collections, dtype = 'datetime64[D]')
-            #accDays = np.zeros(N_collections, dtype=np.timedelta64['D'])
             
             # mass collected by component
             mLeaves.append(subplot_data['mLeaves'])
@@ -1643,7 +1642,7 @@ def get_allocation_fractions(census_file,traits_file,branch_file,leaf_file,lai_f
 
 
 def load_LAI_time_series(LAI_file):
-    datatype = {'names': ('ForestType', 'Plot', 'Date', 'Subplot', 'SkyConditions', 'Exposure', 'LAI', 'Remarks', 'Qflag', 'Qreason'), 'formats': ('S16','S16','S10','i8','S16','i8','f16','S64','i8','S64')}
+    datatype = {'names': ('ForestType', 'Plot', 'Date', 'Subplot', 'SkyConditions', 'Exposure', 'LAI', 'Remarks', 'Qflag', 'Qreason'), 'formats': ('S16','S16','S10','i8','S16','i8','f8','S64','i8','S64')}
     LAI_data = np.genfromtxt(LAI_file, skiprows = 1, delimiter = ',',dtype=datatype)
 
     plot_names = np.unique(LAI_data['Plot'])
@@ -1651,20 +1650,27 @@ def load_LAI_time_series(LAI_file):
     plot_dict = {}
     for pp in range(0,N_plots):
         LAI_dict = {}
-        plot_data = LAI_data[LAI_data['Plot']==plots_names[pp]]
-
+        plot_data = LAI_data[LAI_data['Plot']==plot_names[pp]]
+        N_subplots = np.unique(plot_data['Subplot']).size
         # set up some arrays for data output
         date_str = np.unique(plot_data['Date'])
         N_dates = date_str.size
-        N_subplots = np.unique(plot_data['Subplot'])
-
-        LAI = np.zeros((N_subplots,N_dates))
         dates = np.zeros(N_dates,dtype = 'datetime64[D]')
         for dd in range(0,N_dates):
-            day,month,year = dates_str.split("/")
+            day,month,year = date_str[dd].split("/")
             dates[dd] = np.datetime64(year+'-'+month+'-'+day)
+        dates=np.sort(dates)
+
+        # Need to loop through the dates column in the input array, and produce equivalent but in np.datetime64 so that cross referencing is easier
+        date_ref = np.zeros(plot_data['Date'].size,dtype = 'datetime64[D]')
+        for dd in range(0,plot_data['Date'].size):
+            day,month,year = plot_data['Date'][dd].split("/")            
+            date_ref[dd] =  np.datetime64(year+'-'+month+'-'+day)
+
+        LAI = np.zeros((N_subplots,N_dates))
+        for dd in range(0,N_dates):
             for ss in range(0,N_subplots):
-                index=np.all((plot_data['Date']==date_str[dd],plot_data['Subplot']==ss+1,plot_data['Exposure']==2,plot_data['Qflag']==1),axis=0)
+                index=np.all((date_ref==dates[dd],plot_data['Subplot']==ss+1,plot_data['Exposure']==2,plot_data['Qflag']==1),axis=0)
                 if np.sum(index)>0:
                     LAI[ss,dd] = plot_data['LAI'][index][0]
                 else:
