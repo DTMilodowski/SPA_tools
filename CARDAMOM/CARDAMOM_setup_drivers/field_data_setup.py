@@ -122,21 +122,43 @@ def get_litterfall_ts(litter_file,plot):
 
 
 # Get time series of LAI using spline interpolation to fill the gaps
-def get_LAI_ts(LAI_file,plot):
+def get_LAI_ts(LAI_file,plot, pad_ts = True):
     LAI = field.load_LAI_time_series(LAI_file)
-    N_dates, N_sp = LAI[plot]['LAI'].shape
+    N_sp, N_dates = LAI[plot]['LAI'].shape
     interval = np.zeros(N_dates,'timedelta64[D]')
     interval[1:] = LAI[plot]['date'][1:]-LAI[plot]['date'][:-1]
+    days = np.cumsum(interval)
+    indices = np.arange(0,N_dates,dtype='int')
 
-    LAI_gapfilled = np.zeros((N_sp,N_dates))
+    LAI_gapfilled = np.zeros((N_sp,N_dates))*np.nan
     for ss in range(0,N_sp):
-        mask = np.isfinite(LAI[plot]['LAI'][ss,:])
-        interval_nogaps = np.asarray(interval[mask],dtype='float')
+        # First check to see if there are gaps - if not, don't need to worry
+        if (np.isnan(LAI[plot]['LAI'][ss,:])).sum()==0:
+            LAI_gapfilled[ss,:]=LAI[plot]['LAI'][ss,:].copy()
 
-        LAI_nogaps = LAI[plot]['LAI'][ss,mask]
+        # We don't want to gapfill at the start or end of the time series
+        # as we have no other constraints for the interpolation
+        else:
+            # find first and last datapoint in time series
+            first = indices[np.isfinite(LAI[plot]['LAI'][ss,:])][0]
+            last = indices[np.isfinite(LAI[plot]['LAI'][ss,:])][-1]
+            
+            if (np.isnan(LAI[plot]['LAI'][ss,first:last+1])).sum()==0:
+                LAI_gapfilled[ss,:]=LAI[plot]['LAI'][ss,:].copy()
+            else:
+                mask = np.isfinite(LAI[plot]['LAI'][ss,first:last+1])
+                days_nogaps = np.asarray(days[first:last+1][mask],dtype='float')
+                LAI_nogaps = LAI[plot]['LAI'][ss,first:last+1][mask]
 
-        f = interp1d(interval_nogaps, LAI_nogaps, kind='cubic')  # without specifying "kind", default is linear
-        LAI_gapfilled[ss,:] = f(interval)
+                f = interp1d(days_nogaps, LAI_nogaps, kind='linear')  # without specifying "kind", default is linear
+                LAI_gapfilled[ss,first:last+1] = f(days[first:last+1])
+
+                # for now, pad the time series with constant value where required so that plot average can be obtained
+                if pad_ts == True:
+                    if first>0:
+                        LAI_gapfilled[ss,:first] = LAI_gapfilled[ss,first]
+                    if last<indices[-1]:
+                        LAI_gapfilled[ss,last+1:] = LAI_gapfilled[ss,last]
 
     LAI_plot_ts = np.mean(LAI_gapfilled,axis=0)
     return  LAI[plot]['date'], LAI_plot_ts
