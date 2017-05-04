@@ -136,5 +136,6 @@ def get_LAI_ts(LAI_file,plot, pad_ts = True):
                         LAI_gapfilled[ss,last+1:] = LAI_gapfilled[ss,last]
 
     LAI_plot_ts = np.mean(LAI_gapfilled,axis=0)
-    return  LAI[plot]['date'], LAI_plot_ts
+    LAI_plot_std_ts = np.std(LAI_gapfilled,axis=0)
+    return  LAI[plot]['date'], LAI_plot_ts, LAI_plot_std_ts
 
