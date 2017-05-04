@@ -181,10 +181,12 @@ for pp in range(0,len(plot)):
     LAI_MH_std_in = np.zeros(N_t)-9999.
 
     # LAI data
-    LAI_date, LAI = field.get_LAI_ts(LAI_file,plot)
+    LAI_date, LAI, LAI_std = field.get_LAI_ts(LAI_file,plot)
     N_LAI = LAI_date.size
     for tt in range(0,N_LAI):
         LAI_in[date==LAI_date[tt]] = LAI[tt]
+        LAI_rad_in[date==LAI_date[tt]] = 0.0025*LAI[tt]**3.90
+        LAI_MH_in[date==LAI_date[tt]] = 0.084*LAI[tt]**3.26
 
 
 
