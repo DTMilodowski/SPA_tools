@@ -188,7 +188,7 @@ for i in range(0,N_branches):
 # write traits data to a csv file for ingestion into R
 #plot,subplot,forest_type,branch,shade_tag,spp,genus,leaf_height,light_availability,leaf_thickness,leaf_area,LMA,C%,Carea,N%,Narea,Vcmax,Rd
 out = open('BALI_leaf_traits.csv','w')
-out.write('plot,subplot,forest_type,branch,shade_tag,spp,genus,leaf_height,light_availability,leaf_thickness,leaf_area,LMA,C%,Carea,N%,Narea,Vcmax,Rd\n')
+out.write('plot,subplot,forest_type,branch,shade_tag,spp,genus,leaf_height,light_availability,tree_centric,leaf_thickness,leaf_area,LMA,C%,Carea,N%,Narea,Vcmax,Rd\n')
 for i in range(0,N_branches):
     out.write(plot[i] + ',' + str(subplot[i])  + ', ' + ftype[i] + ',' + branch[i]  + ',' + str(ShadeTag[i])  + ',' + spp[i] + ',' + spp[i].split(' ')[0] + ',' + str(LeafHeight[i]) + ',' + str(light_availability[i]) + ',' + str(tree_centric[i]) + ',' + str( LeafThickness[i]) + ',' + str( LeafArea[i]) + ',' + str(LMA[i]) + ',' + str(C[i]) + ',' + str(LMA_C[i]) + ',' + str(N[i]) + ',' + str(Narea[i]) + ',' + str(Vcmax[i]) + ',' + str(Rd[i]) + '\n')
 
@@ -214,17 +214,6 @@ for i in range(0,len(plots)):
     plt.show()
 
 """
-
-
-
-
-
-
-
-
-
-
-
 
 
 
