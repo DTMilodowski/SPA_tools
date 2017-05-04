@@ -28,8 +28,10 @@ ERA_file = '/home/dmilodow/DataStore_DTM/BALI/MetDataProcessing/ERAinterim/BALI_
 #    -TRMM
 TRMM_file = '/home/dmilodow/DataStore_DTM/BALI/MetDataProcessing/TRMM/g4.areaAvgTimeSeries.TRMM_3B42_007_precipitation.20110101-20160429.117E_4N_117E_4N.csv'
 
-# LAI DATA
-# assume a constant LAI based on LiDAR data
+# Gapfilled met data
+met_file = '/home/dmilodow/DataStore_DTM/BALI/SPA_BALI_data_and_analysis/scripts/construct_drivers/BALI_gapfilled_met_station_daily_v1.csv'
+
+
 
 # FIELD DATA
 #    -Plot census data
@@ -45,9 +47,14 @@ LAI_file = '/home/dmilodow/DataStore_DTM/BALI/BALI_Cplot_data/SAFE_CarbonPlots_L
 # Now get some basic parameters for the run
 start_date= '01/01/2011'
 end_date= '01/03/2016'
-plot = ['Belian','LF','B North']
-LAI = [6.69,4.78,3.0]
-Csoil = [8295.66,11275.18,3934.03]
+plot = ['Belian','LF','B North','B South', 'E', 'Seraya', 'DC1', 'DC2']
+LAI_MH = [6.69,4.78,3.00,2.26,3.84,6.22,5.93,5.89]
+LAI_rad = [8.30,5.76,4.87,3.73,5.70,9.01,8.25,9.35]
+LAI_hemiphot = [4.46,3.76,3.65,3.44,3.93,4.27,4.40,4.05]
+Csoil = [8295.66, 11275.18, 3934.03, 4916.91, 11925.08, 24347.79, 8144.94, -9999.]
+
+# 
+
 
 # Initiate some arrays to host time series
 d,m,y = start_date.split('/')
@@ -93,81 +100,6 @@ for dd in range(0,N_m):
     vpd21_in[date == met_dates[dd]] = vpd21[dd]
 for dd in range(0,N_trmm):
     pptn21_in[date == TRMM_dates[dd]] = pptn21[dd]
-
-
-#---------------------------------------------------------------------------------------------------------------
-# Process field data
-
-for pp in range(0,len(plot)):
-    print plot[pp]
-    Cwood_in = np.zeros(N_t)-9999.
-    Croot_in = np.zeros(N_t)-9999.
-    Csoil_in = np.zeros(N_t)-9999.
-    Litter_in = np.zeros(N_t)-9999.
-    Litter_in = np.zeros(N_t)-9999.
-    LAI_std_in = np.zeros(N_t)-9999.
-    LAI_std_in = np.zeros(N_t)-9999.
-
-
-    # LAI data
-    LAI_date, LAI = field.get_LAI_ts(LAI_file,plot)
-    N_LAI = LAI_date.size
-    for tt in range(0,N_LAI):
-        LAI_in[date==LAI_date[tt]] = LAI[tt]
-
-    # soil carbon reported in g/m2
-    Csoil_in[0] = Csoil[pp]
-
-    # Cwood reported in kg (for 1ha plot)
-    census_date, Cwood = field.get_Cwood_ts(census_file,plot[pp])
-    N_c = Cwood.size
-    for dd in range(0,N_c):
-        Cwood_in[date == census_date[dd]] = Cwood[dd] *1000./10.**4. # convert kg/ha to g/m^2
-
-    # root stocks reported in Mg/ha
-    root_stock_date, Croot, Croot_std = field.get_Croot_ts(roots_file,plot[pp])
-
-    N_r = Croot.size
-    for dd in range(0,N_r):
-        Croot_in[date == root_stock_date[dd]] = Croot[dd]*10**6/10.**4 # convert Mg/ha to g/m^2
-    
-    # litter fluxes reported in Mg/ha/yr
-    litter_collection_date, litter_previous_collection_date, litter_flux, litter_std = field.get_litterfall_ts(litter_file,plot[pp])
-
-    # Initially assume average flux rates for litter between collection dates 
-    N_lit=litter_flux.size
-    for tt in range(0,N_lit):
-        indices = np.all((date>=litter_previous_collection_date[tt], date<litter_collection_date[tt]),axis=0)
-        Litter_in[indices]= litter_flux[tt] * (10.**6/10.**4/365.25) # convert Mg/ha/yr to g/m2/d
-        Litter_std_in[indices]= litter_std[tt] * (10.**6/10.**4/365.25) # convert Mg/ha/yr to g/m2/d
-        
-    # Convert nodata to -9999
-    Litter_in[np.isnan(Litter_in)]=-9999.
-    Litter_std_in[np.isnan(Litter_std_in)]=-9999.
-    Croot_in[np.isnan(Croot_in)]=-9999.
-    Cwood_in[np.isnan(Cwood_in)]=-9999.
-    Csoil_in[np.isnan(Csoil_in)]=-9999.
-    
-    mx2t_in[np.isnan(mx2t_in)]=-9999.
-    mn2t_in[np.isnan(mn2t_in)]=-9999.
-    ssrd_in[np.isnan(ssrd_in)]=-9999.
-    vpd_in[np.isnan(vpd_in)]=-9999.
-    pptn_in[np.isnan(pptn_in)]=-9999.
-    mx2t21_in[np.isnan(mx2t_in)]=-9999.
-    mn2t21_in[np.isnan(mn2t_in)]=-9999.
-    ssrd21_in[np.isnan(ssrd_in)]=-9999.
-    vpd21_in[np.isnan(vpd_in)]=-9999.
-    pptn21_in[np.isnan(pptn_in)]=-9999.
-
-
-    # write output to file
-    outfile_priors = "CARDAMOM_param_priors_"+plot[pp]+".csv"
-    out_priors = open(outfile_priors,'w')
-    out_priors.write('timestep_days, date, Cwood, Croot, Csoil, LitterFlux, LitterFluxStd, LAI\n')
-    for tt in range(0,N_t):
-        out_priors.write(str(tt) + ',' + str(date[tt]) + ', ' + str(Cwood_in[tt]) + ',' + str(Croot_in[tt]) + ',' + str(Csoil_in[tt]) + ',' + str(Litter_in[tt]) + ',' + str(Litter_std_in[tt]) + ',' + str(LAI[tt]) + '\n')
-    out_drivers.close()
-    out_priors.close()
 
 # write met data to file
 outfile_drivers = "BALI_ERAinterim_TRMM_daily_v1.csv"
@@ -230,3 +162,82 @@ for tt in range(0,N_t):
     out_drivers.write(str(tt) + ',' + str(date[tt]) + ', ' + str(mn2t_in[tt]) + ',' + str(mx2t_in[tt]) + ',' + str(vpd_in[tt]) + ',' + str(ssrd_in[tt]) + ',' + str(pptn_in[tt]) + ',' + str(mn2t21_in[tt]) + ',' + str(mx2t21_in[tt]) + ',' + str(vpd21_in[tt]) + ',' + str(ssrd21_in[tt]) + ',' + str(pptn21_in[tt]) + '\n')
 
 out_drivers.close()
+
+
+#---------------------------------------------------------------------------------------------------------------
+# Process field data
+for pp in range(0,len(plot)):
+    print plot[pp]
+    Cwood_in = np.zeros(N_t)-9999.
+    Croot_in = np.zeros(N_t)-9999.
+    Csoil_in = np.zeros(N_t)-9999.
+    Litter_in = np.zeros(N_t)-9999.
+    Litter_in = np.zeros(N_t)-9999.
+    LAI_in = np.zeros(N_t)-9999.
+    LAI_std_in = np.zeros(N_t)-9999.
+    LAI_MH_in = np.zeros(N_t)-9999.
+    LAI_rad_in = np.zeros(N_t)-9999.
+    LAI_rad_std_in = np.zeros(N_t)-9999.
+    LAI_MH_std_in = np.zeros(N_t)-9999.
+
+    # LAI data
+    LAI_date, LAI = field.get_LAI_ts(LAI_file,plot)
+    N_LAI = LAI_date.size
+    for tt in range(0,N_LAI):
+        LAI_in[date==LAI_date[tt]] = LAI[tt]
+
+
+
+    # soil carbon reported in g/m2
+    Csoil_in[0] = Csoil[pp]
+
+    # Cwood reported in kg (for 1ha plot)
+    census_date, Cwood = field.get_Cwood_ts(census_file,plot[pp])
+    N_c = Cwood.size
+    for dd in range(0,N_c):
+        Cwood_in[date == census_date[dd]] = Cwood[dd] *1000./10.**4. # convert kg/ha to g/m^2
+
+    # root stocks reported in Mg/ha
+    root_stock_date, Croot, Croot_std = field.get_Croot_ts(roots_file,plot[pp])
+
+    N_r = Croot.size
+    for dd in range(0,N_r):
+        Croot_in[date == root_stock_date[dd]] = Croot[dd]*10**6/10.**4 # convert Mg/ha to g/m^2
+    
+    # litter fluxes reported in Mg/ha/yr
+    litter_collection_date, litter_previous_collection_date, litter_flux, litter_std = field.get_litterfall_ts(litter_file,plot[pp])
+
+    # Initially assume average flux rates for litter between collection dates 
+    N_lit=litter_flux.size
+    for tt in range(0,N_lit):
+        indices = np.all((date>=litter_previous_collection_date[tt], date<litter_collection_date[tt]),axis=0)
+        Litter_in[indices]= litter_flux[tt] * (10.**6/10.**4/365.25) # convert Mg/ha/yr to g/m2/d
+        Litter_std_in[indices]= litter_std[tt] * (10.**6/10.**4/365.25) # convert Mg/ha/yr to g/m2/d
+        
+    # Convert nodata to -9999
+    Litter_in[np.isnan(Litter_in)]=-9999.
+    Litter_std_in[np.isnan(Litter_std_in)]=-9999.
+    Croot_in[np.isnan(Croot_in)]=-9999.
+    Cwood_in[np.isnan(Cwood_in)]=-9999.
+    Csoil_in[np.isnan(Csoil_in)]=-9999.
+    
+    mx2t_in[np.isnan(mx2t_in)]=-9999.
+    mn2t_in[np.isnan(mn2t_in)]=-9999.
+    ssrd_in[np.isnan(ssrd_in)]=-9999.
+    vpd_in[np.isnan(vpd_in)]=-9999.
+    pptn_in[np.isnan(pptn_in)]=-9999.
+    mx2t21_in[np.isnan(mx2t_in)]=-9999.
+    mn2t21_in[np.isnan(mn2t_in)]=-9999.
+    ssrd21_in[np.isnan(ssrd_in)]=-9999.
+    vpd21_in[np.isnan(vpd_in)]=-9999.
+    pptn21_in[np.isnan(pptn_in)]=-9999.
+
+
+    # write output to file
+    outfile_priors = "CARDAMOM_param_priors_"+plot[pp]+".csv"
+    out_priors = open(outfile_priors,'w')
+    out_priors.write('timestep_days, date, Cwood, Croot, Csoil, LitterFlux, LitterFluxStd, LAI\n')
+    for tt in range(0,N_t):
+        out_priors.write(str(tt) + ',' + str(date[tt]) + ', ' + str(Cwood_in[tt]) + ',' + str(Croot_in[tt]) + ',' + str(Csoil_in[tt]) + ',' + str(Litter_in[tt]) + ',' + str(Litter_std_in[tt]) + ',' + str(LAI[tt]) + '\n')
+    out_drivers.close()
+    out_priors.close()
