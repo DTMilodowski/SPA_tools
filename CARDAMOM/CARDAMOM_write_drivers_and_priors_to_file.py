@@ -196,17 +196,17 @@ out_drivers.close()
 # Process field data
 for pp in range(0,len(plot)):
     print plot[pp]
-    Cwood_in = np.zeros(N_t)-9999.
-    Croot_in = np.zeros(N_t)-9999.
-    Csoil_in = np.zeros(N_t)-9999.
-    Litter_in = np.zeros(N_t)-9999.
-    Litter_std_in = np.zeros(N_t)-9999.
-    LAI_in = np.zeros(N_t)-9999.
-    LAI_std_in = np.zeros(N_t)-9999.
-    LAI_MH_in = np.zeros(N_t)-9999.
-    LAI_rad_in = np.zeros(N_t)-9999.
-    LAI_rad_std_in = np.zeros(N_t)-9999.
-    LAI_MH_std_in = np.zeros(N_t)-9999.
+    Cwood_in = np.zeros(N_t)*np.nan#-9999.
+    Croot_in = np.zeros(N_t)*np.nan#-9999.
+    Csoil_in = np.zeros(N_t)*np.nan#-9999.
+    Litter_in = np.zeros(N_t)*np.nan#-9999.
+    Litter_std_in = np.zeros(N_t)*np.nan#-9999.
+    LAI_in = np.zeros(N_t)*np.nan#-9999.
+    LAI_std_in = np.zeros(N_t)*np.nan#-9999.
+    LAI_MH_in = np.zeros(N_t)*np.nan#-9999.
+    LAI_rad_in = np.zeros(N_t)*np.nan#-9999.
+    LAI_rad_std_in = np.zeros(N_t)*np.nan#-9999.
+    LAI_MH_std_in = np.zeros(N_t)*np.nan#-9999.
 
     # LAI data
     LAI_date, LAI, LAI_std = field.get_LAI_ts(LAI_file,plot[pp])
