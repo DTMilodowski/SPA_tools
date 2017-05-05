@@ -64,6 +64,7 @@ end = np.datetime64(y+'-'+m+'-'+d,'D')
 date = np.arange(start,end+np.timedelta64(1,'D'), dtype = 'datetime64[D]')
 
 N_t = date.size
+
 mn2t_in = np.zeros(N_t)-9999.
 mx2t_in = np.zeros(N_t)-9999.
 vpd_in = np.zeros(N_t)-9999.
@@ -100,6 +101,20 @@ for dd in range(0,N_m):
     vpd21_in[date == met_dates[dd]] = vpd21[dd]
 for dd in range(0,N_trmm):
     pptn21_in[date == TRMM_dates[dd]] = pptn21[dd]
+
+
+    
+    mx2t_in[np.isnan(mx2t_in)]=-9999.
+    mn2t_in[np.isnan(mn2t_in)]=-9999.
+    ssrd_in[np.isnan(ssrd_in)]=-9999.
+    vpd_in[np.isnan(vpd_in)]=-9999.
+    pptn_in[np.isnan(pptn_in)]=-9999.
+    mx2t21_in[np.isnan(mx2t_in)]=-9999.
+    mn2t21_in[np.isnan(mn2t_in)]=-9999.
+    ssrd21_in[np.isnan(ssrd_in)]=-9999.
+    vpd21_in[np.isnan(vpd_in)]=-9999.
+    pptn21_in[np.isnan(pptn_in)]=-9999.
+
 
 # write met data to file
 outfile_drivers = "BALI_ERAinterim_TRMM_daily_v1.csv"
@@ -154,6 +169,19 @@ for dd in range(0,N_m):
     ssrd21_in[date == met_dates[dd]] = ssrd21[dd]
     vpd21_in[date == met_dates[dd]] = vpd21[dd]
     pptn21_in[date == met_dates[dd]] = pptn21[dd]
+
+    
+    mx2t_in[np.isnan(mx2t_in)]=-9999.
+    mn2t_in[np.isnan(mn2t_in)]=-9999.
+    ssrd_in[np.isnan(ssrd_in)]=-9999.
+    vpd_in[np.isnan(vpd_in)]=-9999.
+    pptn_in[np.isnan(pptn_in)]=-9999.
+    mx2t21_in[np.isnan(mx2t_in)]=-9999.
+    mn2t21_in[np.isnan(mn2t_in)]=-9999.
+    ssrd21_in[np.isnan(ssrd_in)]=-9999.
+    vpd21_in[np.isnan(vpd_in)]=-9999.
+    pptn21_in[np.isnan(pptn_in)]=-9999.
+
 # write met data to file
 outfile_drivers = "BALI_gapfilled_met_station_daily_v1.csv"
 out_drivers = open(outfile_drivers,'w')
@@ -172,7 +200,7 @@ for pp in range(0,len(plot)):
     Croot_in = np.zeros(N_t)-9999.
     Csoil_in = np.zeros(N_t)-9999.
     Litter_in = np.zeros(N_t)-9999.
-    Litter_in = np.zeros(N_t)-9999.
+    Litter_std_in = np.zeros(N_t)-9999.
     LAI_in = np.zeros(N_t)-9999.
     LAI_std_in = np.zeros(N_t)-9999.
     LAI_MH_in = np.zeros(N_t)-9999.
@@ -181,14 +209,15 @@ for pp in range(0,len(plot)):
     LAI_MH_std_in = np.zeros(N_t)-9999.
 
     # LAI data
-    LAI_date, LAI, LAI_std = field.get_LAI_ts(LAI_file,plot)
+    LAI_date, LAI, LAI_std = field.get_LAI_ts(LAI_file,plot[pp])
     N_LAI = LAI_date.size
     for tt in range(0,N_LAI):
         LAI_in[date==LAI_date[tt]] = LAI[tt]
         LAI_rad_in[date==LAI_date[tt]] = 0.0025*LAI[tt]**3.90
         LAI_MH_in[date==LAI_date[tt]] = 0.084*LAI[tt]**3.26
-
-
+        LAI_std_in[date==LAI_date[tt]] = LAI_std[tt]
+        LAI_rad_std_in[date==LAI_date[tt]] = 0.0025*LAI_std[tt]**3.90
+        LAI_MH_std_in[date==LAI_date[tt]] = 0.084*LAI_std[tt]**3.26
 
     # soil carbon reported in g/m2
     Csoil_in[0] = Csoil[pp]
@@ -200,11 +229,8 @@ for pp in range(0,len(plot)):
         Cwood_in[date == census_date[dd]] = Cwood[dd] *1000./10.**4. # convert kg/ha to g/m^2
 
     # root stocks reported in Mg/ha
-    root_stock_date, Croot, Croot_std = field.get_Croot_ts(roots_file,plot[pp])
-
-    N_r = Croot.size
-    for dd in range(0,N_r):
-        Croot_in[date == root_stock_date[dd]] = Croot[dd]*10**6/10.**4 # convert Mg/ha to g/m^2
+    root_stock_date, Croot, Croot_std = field.get_Croot(roots_file,plot[pp])
+    Croot_in[date == root_stock_date] = Croot*10**6/10.**4 # convert Mg/ha to g/m^2
     
     # litter fluxes reported in Mg/ha/yr
     litter_collection_date, litter_previous_collection_date, litter_flux, litter_std = field.get_litterfall_ts(litter_file,plot[pp])
@@ -219,27 +245,21 @@ for pp in range(0,len(plot)):
     # Convert nodata to -9999
     Litter_in[np.isnan(Litter_in)]=-9999.
     Litter_std_in[np.isnan(Litter_std_in)]=-9999.
+    LAI_MH_in[np.isnan(LAI_MH_in)]=-9999.
+    LAI_MH_std_in[np.isnan(LAI_MH_std_in)]=-9999.
+    LAI_rad_in[np.isnan(LAI_rad_in)]=-9999.
+    LAI_rad_std_in[np.isnan(LAI_rad_std_in)]=-9999.
+    LAI_in[np.isnan(LAI_in)]=-9999.
+    LAI_std_in[np.isnan(LAI_std_in)]=-9999.
     Croot_in[np.isnan(Croot_in)]=-9999.
     Cwood_in[np.isnan(Cwood_in)]=-9999.
     Csoil_in[np.isnan(Csoil_in)]=-9999.
-    
-    mx2t_in[np.isnan(mx2t_in)]=-9999.
-    mn2t_in[np.isnan(mn2t_in)]=-9999.
-    ssrd_in[np.isnan(ssrd_in)]=-9999.
-    vpd_in[np.isnan(vpd_in)]=-9999.
-    pptn_in[np.isnan(pptn_in)]=-9999.
-    mx2t21_in[np.isnan(mx2t_in)]=-9999.
-    mn2t21_in[np.isnan(mn2t_in)]=-9999.
-    ssrd21_in[np.isnan(ssrd_in)]=-9999.
-    vpd21_in[np.isnan(vpd_in)]=-9999.
-    pptn21_in[np.isnan(pptn_in)]=-9999.
 
 
     # write output to file
     outfile_priors = "CARDAMOM_param_priors_"+plot[pp]+".csv"
     out_priors = open(outfile_priors,'w')
-    out_priors.write('timestep_days, date, Cwood, Croot, Csoil, LitterFlux, LitterFluxStd, LAI\n')
+    out_priors.write('timestep_days, date, Cwood, Croot, Csoil, LitterFlux, LitterFluxStd, LAI_hemi, std, LAI_MH, std, LAI_rad, std\n')
     for tt in range(0,N_t):
-        out_priors.write(str(tt) + ',' + str(date[tt]) + ', ' + str(Cwood_in[tt]) + ',' + str(Croot_in[tt]) + ',' + str(Csoil_in[tt]) + ',' + str(Litter_in[tt]) + ',' + str(Litter_std_in[tt]) + ',' + str(LAI[tt]) + '\n')
-    out_drivers.close()
+        out_priors.write(str(tt) + ',' + str(date[tt]) + ', ' + str(Cwood_in[tt]) + ',' + str(Croot_in[tt]) + ',' + str(Csoil_in[tt]) + ',' + str(Litter_in[tt]) + ',' + str(Litter_std_in[tt]) + ',' + str(LAI_in[tt]) + ',' + str(LAI_std_in[tt]) + ',' + str(LAI_MH_in[tt]) + ',' + str(LAI_MH_std_in[tt]) + ',' + str(LAI_rad_in[tt]) + ',' + str(LAI_rad_std_in[tt]) + '\n')
     out_priors.close()
