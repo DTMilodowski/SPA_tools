@@ -90,7 +90,7 @@ def get_litterfall_ts(litter_file,plot):
 
     litter_gapfilled[litter_gapfilled<0]=0
 
-    litter_plot_ts = np.mean(litter_gapfilled,axis=0)
+    litter_fall_ts = np.mean(litter_gapfilled,axis=0)
     litter_fall_std = np.std(litter_gapfilled,axis=0)
 
     return collection_dates, previous_collection_dates, litter_fall_ts, litter_fall_std
