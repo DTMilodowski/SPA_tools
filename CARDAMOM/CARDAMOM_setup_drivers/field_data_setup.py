@@ -159,7 +159,7 @@ def get_LAI_ts(LAI_file,plot, pad_ts = True):
         # We don't want to gapfill at the start or end of the time series
         # as we have no other constraints for the interpolation
         else:
-            LAI_gapfilled[ss,:]=gapfill_field_data(LAI[plot][ss,:],days,pad_ts=pad_ts)
+            LAI_gapfilled[ss,:]=gapfill_field_data(LAI[plot]['LAI'][ss,:],days,pad_ts=pad_ts)
             """
             # find first and last datapoint in time series
             first = indices[np.isfinite(LAI[plot]['LAI'][ss,:])][0]
@@ -203,7 +203,7 @@ def get_subplot_LAI_ts(LAI_file,plot, pad_ts = True):
         # We don't want to gapfill at the start or end of the time series
         # as we have no other constraints for the interpolation
         else:
-            LAI_gapfilled[ss,:]=gapfill_field_data(LAI[plot][ss,:],days,pad_ts=pad_ts)
+            LAI_gapfilled[ss,:]=gapfill_field_data(LAI[plot]['LAI'][ss,:],days,pad_ts=pad_ts)
             """
             # find first and last datapoint in time series
             first = indices[np.isfinite(LAI[plot]['LAI'][ss,:])][0]
@@ -234,10 +234,10 @@ def get_subplot_LAI_ts(LAI_file,plot, pad_ts = True):
 # A generic gapfilling script. array is a 1D array with input data to be gapfilled
 def gapfill_field_data(array,tsteps,pad_ts=True):
 
+    indices = np.arange(0,array.size,dtype='int')
     # find first and last datapoint in time series
-    first = indices[np.isfinite(array[0])]
-    last = indices[np.isfinite(array[-1])]
-    
+    first = indices[np.isfinite(array)][0]
+    last = indices[np.isfinite(array)][-1]
     gapfilled = np.zeros(array.size)
 
     if (np.isnan(array[first:last+1])).sum()==0:
@@ -246,9 +246,8 @@ def gapfill_field_data(array,tsteps,pad_ts=True):
         mask = np.isfinite(array[first:last+1])
         tsteps_nogaps = np.asarray(tsteps[first:last+1][mask],dtype='float')
         array_nogaps = array[first:last+1][mask]
-
         f = interp1d(tsteps_nogaps, array_nogaps, kind='linear')  # without specifying "kind", default is linear
-        gapfilled[first:last+1] = f(days[first:last+1])
+        gapfilled[first:last+1] = f(tsteps[first:last+1])
         
     # for now, pad the time series with constant value where required so that plot average can be obtained
     if pad_ts == True:
