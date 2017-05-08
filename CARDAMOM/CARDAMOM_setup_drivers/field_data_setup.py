@@ -66,7 +66,7 @@ def get_Croot(roots_file,plot):
     collection_date = rootStocks[plot]['CollectionDate'][0]
     return collection_date, Croot_plot, Croot_std
 
-def get_litterfall_ts(litter_file,plot):
+def get_litterfall_ts(litter_file,plot, pad_ts = True):
     
     litter = field.read_litterfall_data(litter_file)
     N_sp,N_dates = litter[plot]['rTotal'].shape
@@ -80,7 +80,7 @@ def get_litterfall_ts(litter_file,plot):
     litter_gapfilled = np.zeros((N_sp,N_dates))
     for ss in range(0,N_sp):
         mask = np.isfinite(litter[plot]['rTotal'][ss,:])
-        print ss+1, np.isnan(litter[plot]['rTotal'][ss,:]).sum()
+        #print ss+1, np.isnan(litter[plot]['rTotal'][ss,:]).sum()
         days_nogaps = np.asarray(days[mask],dtype='float64')
         litter_nogaps = np.asarray(litter[plot]['rTotal'][ss,mask],dtype='float64')
         
@@ -95,7 +95,7 @@ def get_litterfall_ts(litter_file,plot):
 
     return collection_dates, previous_collection_dates, litter_fall_ts, litter_fall_std
 
-def get_subplot_litterfall_ts(litter_file,plot):
+def get_subplot_litterfall_ts(litter_file,plot, pad_ts = True):
     
     litter = field.read_litterfall_data(litter_file)
     N_sp,N_dates = litter[plot]['rTotal'].shape
@@ -109,7 +109,7 @@ def get_subplot_litterfall_ts(litter_file,plot):
     litter_gapfilled = np.zeros((N_sp,N_dates))
     for ss in range(0,N_sp):
         mask = np.isfinite(litter[plot]['rTotal'][ss,:])
-        print ss+1, np.isnan(litter[plot]['rTotal'][ss,:]).sum()
+        #print ss+1, np.isnan(litter[plot]['rTotal'][ss,:]).sum()
         days_nogaps = np.asarray(days[mask],dtype='float64')
         litter_nogaps = np.asarray(litter[plot]['rTotal'][ss,mask],dtype='float64')
         
@@ -156,12 +156,12 @@ def get_LAI_ts(LAI_file,plot, pad_ts = True):
                 f = interp1d(days_nogaps, LAI_nogaps, kind='linear')  # without specifying "kind", default is linear
                 LAI_gapfilled[ss,first:last+1] = f(days[first:last+1])
 
-                # for now, pad the time series with constant value where required so that plot average can be obtained
-                if pad_ts == True:
-                    if first>0:
-                        LAI_gapfilled[ss,:first] = LAI_gapfilled[ss,first]
-                    if last<indices[-1]:
-                        LAI_gapfilled[ss,last+1:] = LAI_gapfilled[ss,last]
+            # for now, pad the time series with constant value where required so that plot average can be obtained
+            if pad_ts == True:
+                if first>0:
+                    LAI_gapfilled[ss,:first] = LAI_gapfilled[ss,first]
+                if last<indices[-1]:
+                    LAI_gapfilled[ss,last+1:] = LAI_gapfilled[ss,last]
 
     LAI_plot_ts = np.mean(LAI_gapfilled,axis=0)
     LAI_plot_std_ts = np.std(LAI_gapfilled,axis=0)
@@ -199,11 +199,39 @@ def get_subplot_LAI_ts(LAI_file,plot, pad_ts = True):
                 LAI_gapfilled[ss,first:last+1] = f(days[first:last+1])
 
                 # for now, pad the time series with constant value where required so that plot average can be obtained
-                if pad_ts == True:
-                    if first>0:
-                        LAI_gapfilled[ss,:first] = LAI_gapfilled[ss,first]
-                    if last<indices[-1]:
-                        LAI_gapfilled[ss,last+1:] = LAI_gapfilled[ss,last]
+            if pad_ts == True:
+                if first>0:
+                    LAI_gapfilled[ss,:first] = LAI_gapfilled[ss,first]
+                if last<indices[-1]:
+                    LAI_gapfilled[ss,last+1:] = LAI_gapfilled[ss,last]
 
     LAI_plot_ts = LAI_gapfilled.copy()
     return  LAI[plot]['date'], LAI_plot_ts
+
+
+# A generic gapfilling script. array is a 1D array with input data to be gapfilled
+def gapfill_field_data(array,tsteps,pad_ts=True):
+    
+    first = indices[np.isfinite(array[0])]
+    last = indices[np.isfinite(array[-1])]
+    
+    gapfilled = np.zeros(array.size)
+
+    if (np.isnan(array[first:last+1])).sum()==0:
+        gapfilled=array.copy()
+    else:
+        mask = np.isfinite(array[first:last+1])
+        tsteps_nogaps = np.asarray(tsteps[first:last+1][mask],dtype='float')
+        array_nogaps = array[first:last+1][mask]
+
+        f = interp1d(tsteps_nogaps, array_nogaps, kind='linear')  # without specifying "kind", default is linear
+        gapfilled[first:last+1] = f(days[first:last+1])
+        
+    # for now, pad the time series with constant value where required so that plot average can be obtained
+    if pad_ts == True:
+        if first>0:
+            gapfilled[:first] = gapfilled[first]
+        if last<indices[-1]:
+            gapfilled[last+1:] = gapfilled[last]
+
+    return gapfilled
