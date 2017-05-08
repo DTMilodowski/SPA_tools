@@ -79,6 +79,15 @@ def get_litterfall_ts(litter_file,plot, pad_ts = True):
     
     litter_gapfilled = np.zeros((N_sp,N_dates))
     for ss in range(0,N_sp):
+        # First check to see if there are gaps - if not, don't need to worry
+        if (np.isnan(LAI[plot]['LAI'][ss,:])).sum()==0:
+            litter_gapfilled[ss,:]=litter[plot]['rTotal'][ss,:].copy()
+
+        # We don't want to gapfill at the start or end of the time series
+        # as we have no other constraints for the interpolation
+        else:
+            litter_gapfilled[ss,:]=gapfill_field_data(litter[plot]['rTotal'][ss,:],days,pad_ts=pad_ts)
+        """
         mask = np.isfinite(litter[plot]['rTotal'][ss,:])
         #print ss+1, np.isnan(litter[plot]['rTotal'][ss,:]).sum()
         days_nogaps = np.asarray(days[mask],dtype='float64')
@@ -87,7 +96,7 @@ def get_litterfall_ts(litter_file,plot, pad_ts = True):
         f = interp1d(days_nogaps, litter_nogaps, kind='linear')  # without specifying "kind", default is linear
 
         litter_gapfilled[ss,:] = f(days)
-
+        """
     litter_gapfilled[litter_gapfilled<0]=0
 
     litter_fall_ts = np.mean(litter_gapfilled,axis=0)
@@ -108,6 +117,15 @@ def get_subplot_litterfall_ts(litter_file,plot, pad_ts = True):
     
     litter_gapfilled = np.zeros((N_sp,N_dates))
     for ss in range(0,N_sp):
+        # First check to see if there are gaps - if not, don't need to worry
+        if (np.isnan(LAI[plot]['LAI'][ss,:])).sum()==0:
+            litter_gapfilled[ss,:]=litter[plot]['rTotal'][ss,:].copy()
+
+        # We don't want to gapfill at the start or end of the time series
+        # as we have no other constraints for the interpolation
+        else:
+            litter_gapfilled[ss,:]=gapfill_field_data(litter[plot]['rTotal'][ss,:],days,pad_ts=pad_ts)
+        """                                                    
         mask = np.isfinite(litter[plot]['rTotal'][ss,:])
         #print ss+1, np.isnan(litter[plot]['rTotal'][ss,:]).sum()
         days_nogaps = np.asarray(days[mask],dtype='float64')
@@ -116,9 +134,8 @@ def get_subplot_litterfall_ts(litter_file,plot, pad_ts = True):
         f = interp1d(days_nogaps, litter_nogaps, kind='linear')  # without specifying "kind", default is linear
 
         litter_gapfilled[ss,:] = f(days)
-
+        """
     litter_gapfilled[litter_gapfilled<0]=0
-
     litter_fall_ts = litter_gapfilled.copy()
 
     return collection_dates, previous_collection_dates, litter_fall_ts
@@ -142,6 +159,8 @@ def get_LAI_ts(LAI_file,plot, pad_ts = True):
         # We don't want to gapfill at the start or end of the time series
         # as we have no other constraints for the interpolation
         else:
+            LAI_gapfilled[ss,:]=gapfill_field_data(LAI[plot][ss,:],days,pad_ts=pad_ts)
+            """
             # find first and last datapoint in time series
             first = indices[np.isfinite(LAI[plot]['LAI'][ss,:])][0]
             last = indices[np.isfinite(LAI[plot]['LAI'][ss,:])][-1]
@@ -162,7 +181,7 @@ def get_LAI_ts(LAI_file,plot, pad_ts = True):
                     LAI_gapfilled[ss,:first] = LAI_gapfilled[ss,first]
                 if last<indices[-1]:
                     LAI_gapfilled[ss,last+1:] = LAI_gapfilled[ss,last]
-
+            """
     LAI_plot_ts = np.mean(LAI_gapfilled,axis=0)
     LAI_plot_std_ts = np.std(LAI_gapfilled,axis=0)
     return  LAI[plot]['date'], LAI_plot_ts, LAI_plot_std_ts
@@ -184,6 +203,8 @@ def get_subplot_LAI_ts(LAI_file,plot, pad_ts = True):
         # We don't want to gapfill at the start or end of the time series
         # as we have no other constraints for the interpolation
         else:
+            LAI_gapfilled[ss,:]=gapfill_field_data(LAI[plot][ss,:],days,pad_ts=pad_ts)
+            """
             # find first and last datapoint in time series
             first = indices[np.isfinite(LAI[plot]['LAI'][ss,:])][0]
             last = indices[np.isfinite(LAI[plot]['LAI'][ss,:])][-1]
@@ -204,6 +225,7 @@ def get_subplot_LAI_ts(LAI_file,plot, pad_ts = True):
                     LAI_gapfilled[ss,:first] = LAI_gapfilled[ss,first]
                 if last<indices[-1]:
                     LAI_gapfilled[ss,last+1:] = LAI_gapfilled[ss,last]
+            """
 
     LAI_plot_ts = LAI_gapfilled.copy()
     return  LAI[plot]['date'], LAI_plot_ts
@@ -211,7 +233,8 @@ def get_subplot_LAI_ts(LAI_file,plot, pad_ts = True):
 
 # A generic gapfilling script. array is a 1D array with input data to be gapfilled
 def gapfill_field_data(array,tsteps,pad_ts=True):
-    
+
+    # find first and last datapoint in time series
     first = indices[np.isfinite(array[0])]
     last = indices[np.isfinite(array[-1])]
     
