@@ -80,7 +80,7 @@ def get_litterfall_ts(litter_file,plot, pad_ts = True):
     litter_gapfilled = np.zeros((N_sp,N_dates))
     for ss in range(0,N_sp):
         # First check to see if there are gaps - if not, don't need to worry
-        if (np.isnan(LAI[plot]['LAI'][ss,:])).sum()==0:
+        if (np.isnan(litter[plot]['rTotal'][ss,:])).sum()==0:
             litter_gapfilled[ss,:]=litter[plot]['rTotal'][ss,:].copy()
 
         # We don't want to gapfill at the start or end of the time series
@@ -118,7 +118,7 @@ def get_subplot_litterfall_ts(litter_file,plot, pad_ts = True):
     litter_gapfilled = np.zeros((N_sp,N_dates))
     for ss in range(0,N_sp):
         # First check to see if there are gaps - if not, don't need to worry
-        if (np.isnan(LAI[plot]['LAI'][ss,:])).sum()==0:
+        if (np.isnan(litter[plot]['rTotal'][ss,:])).sum()==0:
             litter_gapfilled[ss,:]=litter[plot]['rTotal'][ss,:].copy()
 
         # We don't want to gapfill at the start or end of the time series
