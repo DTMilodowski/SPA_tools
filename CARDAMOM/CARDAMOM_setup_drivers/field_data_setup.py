@@ -95,6 +95,34 @@ def get_litterfall_ts(litter_file,plot):
 
     return collection_dates, previous_collection_dates, litter_fall_ts, litter_fall_std
 
+def get_subplot_litterfall_ts(litter_file,plot):
+    
+    litter = field.read_litterfall_data(litter_file)
+    N_sp,N_dates = litter[plot]['rTotal'].shape
+
+    collection_dates = np.max(litter[plot]['CollectionDate'],axis=0)
+    previous_collection_dates = np.max(litter[plot]['PreviousCollectionDate'],axis=0)
+
+    interval = np.asarray(collection_dates-previous_collection_dates,dtype='float64')
+    days = np.cumsum(interval)
+    
+    litter_gapfilled = np.zeros((N_sp,N_dates))
+    for ss in range(0,N_sp):
+        mask = np.isfinite(litter[plot]['rTotal'][ss,:])
+        print ss+1, np.isnan(litter[plot]['rTotal'][ss,:]).sum()
+        days_nogaps = np.asarray(days[mask],dtype='float64')
+        litter_nogaps = np.asarray(litter[plot]['rTotal'][ss,mask],dtype='float64')
+        
+        f = interp1d(days_nogaps, litter_nogaps, kind='linear')  # without specifying "kind", default is linear
+
+        litter_gapfilled[ss,:] = f(days)
+
+    litter_gapfilled[litter_gapfilled<0]=0
+
+    litter_fall_ts = litter_gapfilled.copy()
+
+    return collection_dates, previous_collection_dates, litter_fall_ts
+
 
 # Get time series of LAI using spline interpolation to fill the gaps
 def get_LAI_ts(LAI_file,plot, pad_ts = True):
