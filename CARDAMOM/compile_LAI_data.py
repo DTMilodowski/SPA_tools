@@ -51,10 +51,10 @@ inventory_file = '/home/dmilodow/DataStore_DTM/BALI/LiDAR/Data/Local/SAFE_DANUM_
 
 
 # List plots to be assessed and accompanying plot characteristics
-plot =        [ 'Belian',   'LF',   'B North','B South',   'E',   'Seraya',   'DC1',    'DC2'  ]
-markers =     [    'o',      'o',      'o',      'v',      'v',     'v',       'o',      'v'   ]
-edge_colors = [ '#24A23A','#D47E2E','#AC2116','#AC2116','#D47E2E','#24A23A','#24A23A','#24A23A']
-fill_colors = [ '#24A23A','#D47E2E','#AC2116','#AC2116','#D47E2E','#24A23A', 'white' , 'white' ]
+plot =        [ 'Belian',   'Seraya',  'DC1',   'DC2'  ,  'LF',      'E'   ,'B North','B South']
+markers =     [    'o',       'v',      'o',     'v'   ,   'o',      'v'   ,   'o',      'v'   ]
+edge_colors = [ '#24A23A','#24A23A','#24A23A','#24A23A','#D47E2E','#D47E2E','#AC2116','#AC2116']
+fill_colors = [ '#24A23A','#24A23A', 'white' , 'white' ,'#D47E2E','#D47E2E','#AC2116','#AC2116']
 
 
 N = len(plot)
@@ -162,8 +162,8 @@ ax6 = plt.subplot2grid((2,4),(1,1),sharey=ax1,sharex=ax1)
 ax7 = plt.subplot2grid((2,4),(1,2),sharey=ax1,sharex=ax1)
 ax8 = plt.subplot2grid((2,4),(1,3),sharey=ax1,sharex=ax1)
 
-axes = [ax1,ax6,ax7,ax8,ax5,ax2,ax3,ax4]
-ann = ['a','f','g','h','e','b','c','d']
+axes = [ax1,ax2,ax3,ax4,ax5,ax6,ax7,ax8]
+ann = ['a','b','c','d','e','f','g','h']
 
 x_locs = [0.5,1.5,2.5,3.5]
 for pp in range(0,N):
@@ -217,7 +217,7 @@ ax3 = plt.subplot2grid((3,2),(1,0),sharex=ax1)
 ax4 = plt.subplot2grid((3,2),(1,1),sharex=ax1,sharey=ax3)
 ax5 = plt.subplot2grid((3,2),(2,0),sharex=ax1,sharey=ax3)
 ax6 = plt.subplot2grid((3,2),(2,1),sharex=ax1,sharey=ax3)
-x_offs = [0.5,5.5,6.5,7.5,4.5,1.5,2.5,3.5]
+x_offs = [0.5,1.5,2.5,3.5,4.5,5.5,6.5,7.5]
 
 for pp in range(0,N):
     MODIS_plot = plot[pp]
@@ -225,8 +225,8 @@ for pp in range(0,N):
         MODIS_plot = 'BNorth'
     if MODIS_plot == 'B South':
         MODIS_plot = 'BSouth'
-    plt2.violin_plot(ax1,inventory[plot[pp]]['volume'],color=edge_colors[pp],alpha='0.8',x_offset=x_offs[pp])
-    plt2.violin_plot(ax2,litter[plot[pp]]['flux'],color=edge_colors[pp],alpha='0.8',x_offset=x_offs[pp])
+    plt2.violin_plot(ax1,litter[plot[pp]]['flux'],color=edge_colors[pp],alpha='0.8',x_offset=x_offs[pp])
+    plt2.violin_plot(ax2,inventory[plot[pp]]['volume'],color=edge_colors[pp],alpha='0.8',x_offset=x_offs[pp])
     plt2.violin_plot(ax3,MODIS_LAI[MODIS_plot]['LAI'],color=edge_colors[pp],alpha='0.8',x_offset=x_offs[pp])
     plt2.violin_plot(ax4,hemiphot_LAI[plot[pp]]['LAI'],color=edge_colors[pp],alpha='0.8',x_offset=x_offs[pp])
     plt2.violin_plot(ax5,LiDAR_MacHorn_LAI[plot[pp]],color=edge_colors[pp],alpha='0.8',x_offset=x_offs[pp])
