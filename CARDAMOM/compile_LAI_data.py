@@ -94,13 +94,14 @@ for pp in range(0,N):
     # Inventory file -> retrieve subplot level data
     # set up array to host inventory profiles
     inventory_LAI = np.zeros(N_sp)
+    inventory[plot[pp]]={}
     for ss in range(0,N_sp):
         subplot = ss+1
         mask = np.all((inventory_data['plot']==plot[pp],inventory_data['subplot']==subplot),axis=0)
         Ht,Area,Depth = invent.calculate_crown_dimensions(inventory_data['DBH_field'][mask],inventory_data['Height_field'][mask],inventory_data['CrownArea'][mask], a_ht, b_ht, CF_ht, a_A, b_A, CF_A, a, b, CF)
         inventory_LAD, CanopyV = invent.calculate_LAD_profiles_generic(heights, Area, Depth, Ht, beta, subplot_area)
         inventory_LAI[ss] = np.sum(inventory_LAD)
-    inventory['volume'] = inventory_LAI.copy()
+    inventory[plot[pp]]['volume'] = inventory_LAI.copy()
     
 
     # Litter file -> upload subplot level data
@@ -140,6 +141,12 @@ ax3.set_ylabel('litter flux / Mg ha$^{-1}$ yr$^{-1}$',fontsize=axis_size)
 
 ax3.legend(loc='center right',fontsize = rcParams['font.size'])
 ax1.set_xlim(xmin=np.datetime64('2011-06-01','D').astype(datetime))
+
+
+xticklabels = ax1.get_xticklabels() + ax2.get_xticklabels()
+plt.setp(xticklabels,visible=False)
+plt.subplots_adjust(hspace=0.001,wspace=0.001)
+
 plt.tight_layout()
 
 
@@ -199,5 +206,72 @@ plt.subplots_adjust(hspace=0.001,wspace=0.001)
 
 ax1.set_ylim(ymax=15)
 plt.tight_layout()
+
+
+
+# Third violin plots of all foliage data
+plt.figure(3, facecolor='White',figsize=[9,9])
+ax1 = plt.subplot2grid((3,2),(0,0),sharex=ax1)
+ax2 = plt.subplot2grid((3,2),(0,1),sharex=ax1)
+ax3 = plt.subplot2grid((3,2),(1,0),sharex=ax1)
+ax4 = plt.subplot2grid((3,2),(1,1),sharex=ax1,sharey=ax3)
+ax5 = plt.subplot2grid((3,2),(2,0),sharex=ax1,sharey=ax3)
+ax6 = plt.subplot2grid((3,2),(2,1),sharex=ax1,sharey=ax3)
+x_offs = [0.5,5.5,6.5,7.5,4.5,1.5,2.5,3.5]
+
+for pp in range(0,N):
+    MODIS_plot = plot[pp]
+    if MODIS_plot == 'B North':
+        MODIS_plot = 'BNorth'
+    if MODIS_plot == 'B South':
+        MODIS_plot = 'BSouth'
+    plt2.violin_plot(ax1,inventory[plot[pp]]['volume'],color=edge_colors[pp],alpha='0.8',x_offset=x_offs[pp])
+    plt2.violin_plot(ax2,litter[plot[pp]]['flux'],color=edge_colors[pp],alpha='0.8',x_offset=x_offs[pp])
+    plt2.violin_plot(ax3,MODIS_LAI[MODIS_plot]['LAI'],color=edge_colors[pp],alpha='0.8',x_offset=x_offs[pp])
+    plt2.violin_plot(ax4,hemiphot_LAI[plot[pp]]['LAI'],color=edge_colors[pp],alpha='0.8',x_offset=x_offs[pp])
+    plt2.violin_plot(ax5,LiDAR_MacHorn_LAI[plot[pp]],color=edge_colors[pp],alpha='0.8',x_offset=x_offs[pp])
+    plt2.violin_plot(ax6,LiDAR_rad_LAI[plot[pp]],color=edge_colors[pp],alpha='0.8',x_offset=x_offs[pp])
+
+# configure plot
+ax1.annotate('a - Litter traps', xy=(0.05,0.95), xycoords='axes fraction',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2,backgroundcolor='white') 
+ax2.annotate('b - Canopy volume estimates', xy=(0.05,0.95), xycoords='axes fraction',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2,backgroundcolor='white') 
+ax3.annotate('c - MODIS', xy=(0.05,0.95), xycoords='axes fraction',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2,backgroundcolor='white') 
+ax4.annotate('d - Hemisfer', xy=(0.05,0.95), xycoords='axes fraction',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2,backgroundcolor='white') 
+ax5.annotate('e - LiDAR (MacArthur-Horn)', xy=(0.05,0.95), xycoords='axes fraction',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2,backgroundcolor='white') 
+ax6.annotate('f - LiDAR (radiative transfer)', xy=(0.05,0.95), xycoords='axes fraction',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2,backgroundcolor='white') 
+
+ax1.set_ylabel('litter flux / Mg ha$^{-1}$ yr$^{-1}$',fontsize=axis_size)
+ax2.set_ylabel('canopy volume / m$^3$ m$^{-2}$',fontsize=axis_size)
+ax3.set_ylabel('LAI',fontsize=axis_size)
+ax4.set_ylabel('LAI',fontsize=axis_size)
+ax5.set_ylabel('LAI',fontsize=axis_size)
+ax6.set_ylabel('LAI',fontsize=axis_size)
+
+x_locs = [0.5,1.5,2.5,3.5,4.5,5.5,6.5,7.5]
+ax1.set_xticks(x_locs)
+xticks=ax1.get_xticks().tolist()
+xticks[0]='Belian'
+xticks[1]='Seraya'
+xticks[2]='DC1'
+xticks[3]='DC2'
+xticks[4]='E'
+xticks[5]='LF'
+xticks[6]='B North'
+xticks[7]='B South'
+ax5.set_xticklabels(xticks,rotation=90,fontsize=axis_size)
+ax6.set_xticklabels(xticks,rotation=90,fontsize=axis_size)
+
+xticklabels = ax1.get_xticklabels() + ax2.get_xticklabels() +ax3.get_xticklabels() +ax4.get_xticklabels()
+plt.setp(xticklabels,visible=False)
+
+ax1.set_ylim((0,26))
+ax2.set_ylim((0,20))
+ax3.set_ylim((0,15))
+
+
+plt.subplots_adjust(hspace=0.001,wspace=0.001)
+
+plt.tight_layout()
+
 
 plt.show()
