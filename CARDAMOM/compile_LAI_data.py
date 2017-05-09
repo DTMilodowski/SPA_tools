@@ -141,5 +141,63 @@ ax3.set_ylabel('litter flux / Mg ha$^{-1}$ yr$^{-1}$',fontsize=axis_size)
 ax3.legend(loc='center right',fontsize = rcParams['font.size'])
 ax1.set_xlim(xmin=np.datetime64('2011-06-01','D').astype(datetime))
 plt.tight_layout()
-plt.show()
 
+
+
+# Second violin plots of all foliage-related observations 
+plt.figure(2, facecolor='White',figsize=[9,6])
+ax1 = plt.subplot2grid((2,4),(0,0))
+ax2 = plt.subplot2grid((2,4),(0,1),sharey=ax1,sharex=ax1)
+ax3 = plt.subplot2grid((2,4),(0,2),sharey=ax1,sharex=ax1)
+ax4 = plt.subplot2grid((2,4),(0,3),sharey=ax1,sharex=ax1)
+ax5 = plt.subplot2grid((2,4),(1,0),sharey=ax1,sharex=ax1)
+ax6 = plt.subplot2grid((2,4),(1,1),sharey=ax1,sharex=ax1)
+ax7 = plt.subplot2grid((2,4),(1,2),sharey=ax1,sharex=ax1)
+ax8 = plt.subplot2grid((2,4),(1,3),sharey=ax1,sharex=ax1)
+
+axes = [ax1,ax6,ax7,ax8,ax5,ax2,ax3,ax4]
+ann = ['a','f','g','h','e','b','c','d']
+
+x_locs = [0.5,1.5,2.5,3.5]
+for pp in range(0,N):
+    MODIS_plot = plot[pp]
+    if MODIS_plot == 'B North':
+        MODIS_plot = 'BNorth'
+    if MODIS_plot == 'B South':
+        MODIS_plot = 'BSouth'
+
+    axes[pp].annotate(ann[pp]+' - ' +plot[pp], xy=(0.05,0.95), xycoords='axes fraction',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2,backgroundcolor='None') 
+    plt2.violin_plot(axes[pp],MODIS_LAI[MODIS_plot]['LAI'],color=edge_colors[pp],alpha='0.8',x_offset=x_locs[0])
+    plt2.violin_plot(axes[pp],hemiphot_LAI[plot[pp]]['LAI'],color=edge_colors[pp],alpha='0.8',x_offset=x_locs[1])
+    plt2.violin_plot(axes[pp],LiDAR_MacHorn_LAI[plot[pp]],color=edge_colors[pp],alpha='0.8',x_offset=x_locs[2])
+    plt2.violin_plot(axes[pp],LiDAR_rad_LAI[plot[pp]],color=edge_colors[pp],alpha='0.8',x_offset=x_locs[3])
+
+
+
+# configure plot
+ax1.set_ylabel('LAI',fontsize=axis_size)
+ax5.set_ylabel('LAI',fontsize=axis_size)
+
+ax1.set_xticks(x_locs)
+xticks=ax1.get_xticks().tolist()
+xticks[0]='MODIS'
+xticks[1]='Hemisfer'
+xticks[2]='LiDAR-MH'
+xticks[3]='LiDAR-rad'
+ax4.set_xticklabels(xticks,rotation=90,fontsize=axis_size)
+ax5.set_xticklabels(xticks,rotation=90,fontsize=axis_size)
+ax6.set_xticklabels(xticks,rotation=90,fontsize=axis_size)
+ax7.set_xticklabels(xticks,rotation=90,fontsize=axis_size)
+ax8.set_xticklabels(xticks,rotation=90,fontsize=axis_size)
+
+xticklabels = ax1.get_xticklabels() + ax2.get_xticklabels() +ax3.get_xticklabels() +ax4.get_xticklabels()
+yticklabels = ax2.get_yticklabels() + ax3.get_yticklabels() +ax4.get_yticklabels() +ax6.get_yticklabels() + ax7.get_yticklabels() +ax8.get_yticklabels()
+    
+plt.setp(xticklabels,visible=False)
+plt.setp(yticklabels,visible=False)
+plt.subplots_adjust(hspace=0.001,wspace=0.001)
+
+ax1.set_ylim(ymax=15)
+plt.tight_layout()
+
+plt.show()
