@@ -1076,15 +1076,28 @@ def collate_plot_level_census_data(census_file):
                     BasalArea[s,y]= np.pi*np.sum((DBHtemp[np.isfinite(DBHtemp)]/2)**2)   
                 else:
                     BasalArea[s,y]=np.nan
-
+        
+        # need to do catch for where there are no trees in subplot that has been surveyed!
+        for s in range(0,n_subplots):
+            for y in range(0,3):
+                if dates[s,y]==np.datetime64('1970-01-01','D'):
+                    if np.max(dates[:,y])>np.datetime64('1970-01-01','D'):
+                        dates[s,y]=np.max(dates[:,y])
+                        Croot[s,y]=0.
+                        Cstem[s,y]=0.
         # now lets do the growth, mortality and recruitment
         for s in range(0,n_subplots):
             subplot_indices = plot_indices * Subplot==subplot_ids[s]
             Cwood_temp = C_stem[subplot_indices]+C_coarse_root[subplot_indices]            
             for y in range(1,3):
+                """
                 growth_indices = np.all((np.isfinite(Cwood_temp[:,y-1]),np.isfinite(Cwood_temp[:,y])),axis=0)
                 recruit_indices = np.all((np.isfinite(Cwood_temp[:,y]),~np.isfinite(Cwood_temp[:,y-1])),axis=0)
                 mortality_indices = np.all((np.isfinite(Cwood_temp[:,y-1]),~np.isfinite(Cwood_temp[:,y])),axis=0)
+                """
+                growth_indices = np.all((Cwood_temp[:,y-1]>0,Cwood_temp[:,y]>0),axis=0)
+                recruit_indices = np.all((Cwood_temp[:,y]>0,Cwood_temp[:,y-1]==0),axis=0)
+                mortality_indices = np.all((Cwood_temp[:,y-1]>0,Cwood_temp[:,y]==0),axis=0)
                 if np.isfinite(Cwood_temp).sum()>0:
                     Growth[s,y] = np.sum(Cwood_temp[:,y][growth_indices]-Cwood_temp[:,y-1][growth_indices])
                     Recruitment[s,y] = np.sum(Cwood_temp[:,y][recruit_indices])
