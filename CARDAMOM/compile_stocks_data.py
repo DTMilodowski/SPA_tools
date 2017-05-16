@@ -45,7 +45,7 @@ ax3 = plt.subplot2grid((3,3),(0,2),sharey=ax1,sharex=ax1)
 ax4 = plt.subplot2grid((3,3),(1,0),sharey=ax1,sharex=ax1)
 ax5 = plt.subplot2grid((3,3),(1,1),sharey=ax1,sharex=ax1)
 ax6 = plt.subplot2grid((3,3),(1,2),sharey=ax1,sharex=ax1)
-ax7 = plt.subplot2grid((3,3),(2,0),colspan=4,sharey=ax1, sharex=ax1)
+ax7 = plt.subplot2grid((3,3),(2,0),colspan=4, sharex=ax1)
 
 axes = [ax1,ax2,ax3,ax4,ax5,ax6]
 ann = ['a','b','c','d','e','f']
@@ -72,10 +72,11 @@ ax7.annotate('g - all SAFE 1 ha plots', xy=(0.02,0.95), xycoords='axes fraction'
 xticklabels = ax1.get_xticklabels() + ax2.get_xticklabels() +ax3.get_xticklabels()
 yticklabels = ax2.get_yticklabels() + ax3.get_yticklabels() +ax5.get_yticklabels() +ax6.get_yticklabels()
 
-ax1.set_ylabel('Cwood / Mg ha${-1}$', fontsize = axis_size)
-ax4.set_ylabel('Cwood / Mg ha${-1}$', fontsize = axis_size)
-ax7.set_ylabel('Cwood / Mg ha${-1}$', fontsize = axis_size)
-ax7.set_ylim(ymax=400000)
+ax1.set_ylabel('Cwood / Mg ha$^{-1}$', fontsize = axis_size)
+ax4.set_ylabel('Cwood / Mg ha$^{-1}$', fontsize = axis_size)
+ax7.set_ylabel('Cwood / Mg ha$^{-1}$', fontsize = axis_size)
+ax6.set_ylim(ymax=1000)
+ax7.set_ylim(ymax=500)
 ax7.set_xlim(xmax=np.datetime64('2016-01-01').astype(datetime))
 ax7.legend(loc='upper right',fontsize = rcParams['font.size'])
 plt.setp(xticklabels,visible=False)
@@ -83,7 +84,8 @@ plt.setp(yticklabels,visible=False)
 
 plt.subplots_adjust(hspace=0.001,wspace=0.001)
 plt.tight_layout()
-
+plt.savefig('SAFE_Cwood_stocks.png')
+plt.show()
 
 # Now plot growth
 plt.figure(2, facecolor='White',figsize=[9,9])
@@ -122,9 +124,9 @@ ax7.annotate('g - all SAFE 1 ha plots', xy=(0.02,0.95), xycoords='axes fraction'
 xticklabels = ax1.get_xticklabels() + ax2.get_xticklabels() +ax3.get_xticklabels()
 yticklabels = ax2.get_yticklabels() + ax3.get_yticklabels() +ax5.get_yticklabels() +ax6.get_yticklabels()
 
-ax1.set_ylabel('growth / Mg ha${-1}$', fontsize = axis_size)
-ax4.set_ylabel('growth / Mg ha${-1}$', fontsize = axis_size)
-ax7.set_ylabel('growth / Mg ha${-1}$', fontsize = axis_size)
+ax1.set_ylabel('growth / Mg ha$^{-1}$', fontsize = axis_size)
+ax4.set_ylabel('growth / Mg ha$^{-1}$', fontsize = axis_size)
+ax7.set_ylabel('growth / Mg ha$^{-1}$', fontsize = axis_size)
 #ax7.set_ylim(ymax=400000)
 ax7.set_xlim(xmax=np.datetime64('2016-01-01').astype(datetime))
 ax7.legend(loc='center left',fontsize = rcParams['font.size'])
@@ -133,6 +135,8 @@ plt.setp(yticklabels,visible=False)
 
 plt.subplots_adjust(hspace=0.001,wspace=0.001)
 plt.tight_layout()
+plt.savefig('SAFE_Cwood_growth.png')
+plt.show()
 
 
 
@@ -175,10 +179,10 @@ ax7.annotate('g - all SAFE 1 ha plots', xy=(0.02,0.95), xycoords='axes fraction'
 xticklabels = ax1.get_xticklabels() + ax2.get_xticklabels() +ax3.get_xticklabels()
 yticklabels = ax2.get_yticklabels() + ax3.get_yticklabels() +ax5.get_yticklabels() +ax6.get_yticklabels()
 
-ax1.set_ylabel('recruitment / Mg ha${-1}$', fontsize = axis_size)
-ax4.set_ylabel('recruitment / Mg ha${-1}$', fontsize = axis_size)
-ax7.set_ylabel('recruitment / Mg ha${-1}$', fontsize = axis_size)
-ax7.set_ylim(ymax=20000)
+ax1.set_ylabel('recruitment / Mg ha$^{-1}$', fontsize = axis_size)
+ax4.set_ylabel('recruitment / Mg ha$^{-1}$', fontsize = axis_size)
+ax7.set_ylabel('recruitment / Mg ha$^{-1}$', fontsize = axis_size)
+ax7.set_ylim(ymax=10)
 ax7.set_xlim(xmax=np.datetime64('2016-01-01').astype(datetime))
 ax7.legend(loc='center left',fontsize = rcParams['font.size'])
 plt.setp(xticklabels,visible=False)
@@ -186,6 +190,8 @@ plt.setp(yticklabels,visible=False)
 
 plt.subplots_adjust(hspace=0.001,wspace=0.001)
 plt.tight_layout()
+plt.savefig('SAFE_Cwood_recruitment.png')
+plt.show()
 
 
 # Now plot mortality
@@ -226,9 +232,9 @@ ax7.annotate('g - all SAFE 1 ha plots', xy=(0.02,0.95), xycoords='axes fraction'
 xticklabels = ax1.get_xticklabels() + ax2.get_xticklabels() +ax3.get_xticklabels()
 yticklabels = ax2.get_yticklabels() + ax3.get_yticklabels() +ax5.get_yticklabels() +ax6.get_yticklabels()
 
-ax1.set_ylabel('mortality / Mg ha${-1}$', fontsize = axis_size)
-ax4.set_ylabel('mortality / Mg ha${-1}$', fontsize = axis_size)
-ax7.set_ylabel('mortality / Mg ha${-1}$', fontsize = axis_size)
+ax1.set_ylabel('mortality / Mg ha$^{-1}$', fontsize = axis_size)
+ax4.set_ylabel('mortality / Mg ha$^{-1}$', fontsize = axis_size)
+ax7.set_ylabel('mortality / Mg ha$^{-1}$', fontsize = axis_size)
 ax7.set_xlim(xmax=np.datetime64('2016-01-01').astype(datetime))
 ax7.legend(loc='center left',fontsize = rcParams['font.size'])
 plt.setp(xticklabels,visible=False)
@@ -236,6 +242,8 @@ plt.setp(yticklabels,visible=False)
 
 plt.subplots_adjust(hspace=0.001,wspace=0.001)
 plt.tight_layout()
+plt.savefig('SAFE_Cwood_mortality.png')
+plt.show()
 
 
 # Now plot NPP
@@ -276,9 +284,9 @@ ax7.annotate('g - all SAFE 1 ha plots', xy=(0.02,0.95), xycoords='axes fraction'
 xticklabels = ax1.get_xticklabels() + ax2.get_xticklabels() +ax3.get_xticklabels()
 yticklabels = ax2.get_yticklabels() + ax3.get_yticklabels() +ax5.get_yticklabels() +ax6.get_yticklabels()
 
-ax1.set_ylabel('cumulative NPP / Mg ha${-1}$', fontsize = axis_size)
-ax4.set_ylabel('cumulative NPP / Mg ha${-1}$', fontsize = axis_size)
-ax7.set_ylabel('cumulative NPP / Mg ha${-1}$', fontsize = axis_size)
+ax1.set_ylabel('cumulative NPP / Mg ha$^{-1}$', fontsize = axis_size)
+ax4.set_ylabel('cumulative NPP / Mg ha$^{-1}$', fontsize = axis_size)
+ax7.set_ylabel('cumulative NPP / Mg ha$^{-1}$', fontsize = axis_size)
 ax7.set_xlim(xmax=np.datetime64('2016-01-01').astype(datetime))
 ax7.legend(loc='center left',fontsize = rcParams['font.size'])
 plt.setp(xticklabels,visible=False)
@@ -286,5 +294,7 @@ plt.setp(yticklabels,visible=False)
 
 plt.subplots_adjust(hspace=0.001,wspace=0.001)
 plt.tight_layout()
+plt.show()
+plt.savefig('SAFE_Cwood_npp.png')
 plt.show()
 
