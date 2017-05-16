@@ -148,8 +148,8 @@ plt.setp(xticklabels,visible=False)
 plt.subplots_adjust(hspace=0.001,wspace=0.001)
 
 plt.tight_layout()
-
-
+plt.savefig('LAI_time_series.png')
+plt.show()
 
 # Second violin plots of all foliage-related observations 
 plt.figure(2, facecolor='White',figsize=[9,6])
@@ -206,7 +206,8 @@ plt.subplots_adjust(hspace=0.001,wspace=0.001)
 
 ax1.set_ylim(ymax=15)
 plt.tight_layout()
-
+plt.savefig('Cfol_related_observations.png')
+plt.show()
 
 
 # Third violin plots of all foliage data
@@ -272,6 +273,7 @@ ax3.set_ylim((0,15))
 plt.subplots_adjust(hspace=0.001,wspace=0.001)
 
 plt.tight_layout()
+plt.savefig('All_Cfol_data.png')
 
 
 plt.show()
