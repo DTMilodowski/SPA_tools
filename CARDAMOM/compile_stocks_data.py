@@ -294,7 +294,6 @@ plt.setp(yticklabels,visible=False)
 
 plt.subplots_adjust(hspace=0.001,wspace=0.001)
 plt.tight_layout()
-plt.show()
 plt.savefig('SAFE_Cwood_npp.png')
 plt.show()
 
