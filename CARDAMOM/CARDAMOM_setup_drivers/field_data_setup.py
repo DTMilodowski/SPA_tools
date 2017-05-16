@@ -12,7 +12,7 @@ def get_Cwood_ts(census_file,plot):
     census = field.collate_plot_level_census_data(census_file)
     plot_biomass = np.sum(census[plot]['C_wood'],axis=0)
     collection_date = np.max(census[plot]['CensusDate'],axis=0)
-    plot_biomass[collection_date<np.datetime64('CensusDate')]=np.nan
+    plot_biomass[collection_date<np.datetime64('2000-01-01','D')]=np.nan
     return collection_date[np.isfinite(plot_biomass)], plot_biomass[np.isfinite(plot_biomass)]
 
 # Get time series of fine root NPP
