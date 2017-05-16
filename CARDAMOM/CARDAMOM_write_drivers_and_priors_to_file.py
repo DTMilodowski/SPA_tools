@@ -213,11 +213,11 @@ for pp in range(0,len(plot)):
     N_LAI = LAI_date.size
     for tt in range(0,N_LAI):
         LAI_in[date==LAI_date[tt]] = LAI[tt]
-        LAI_rad_in[date==LAI_date[tt]] = 0.025*LAI[tt]**3.90
-        LAI_MH_in[date==LAI_date[tt]] = 0.084*LAI[tt]**3.26
+        LAI_rad_in[date==LAI_date[tt]] = LAI[tt]*LAI_rad[pp]/LAI_hemiphot[pp]#0.025*LAI[tt]**3.90
+        LAI_MH_in[date==LAI_date[tt]] = LAI[tt]*LAI_MH[pp]/LAI_hemiphot[pp]#0.084*LAI[tt]**3.26
         LAI_std_in[date==LAI_date[tt]] = LAI_std[tt]
-        LAI_rad_std_in[date==LAI_date[tt]] = 0.025*LAI_std[tt]**3.90
-        LAI_MH_std_in[date==LAI_date[tt]] = 0.084*LAI_std[tt]**3.26
+        LAI_rad_std_in[date==LAI_date[tt]] = LAI_std[tt]*LAI_rad[pp]/LAI_hemiphot[pp]#0.025*LAI_std[tt]**3.90
+        LAI_MH_std_in[date==LAI_date[tt]] = LAI_std[tt]*LAI_MH[pp]/LAI_hemiphot[pp]#0.084*LAI_std[tt]**3.26
 
     # soil carbon reported in g/m2
     Csoil_in[0] = Csoil[pp]
