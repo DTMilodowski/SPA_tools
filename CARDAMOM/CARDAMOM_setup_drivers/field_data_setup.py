@@ -18,22 +18,31 @@ def get_Cwood_ts(census_file,plot):
 # Get time series of fine root NPP
 def get_root_NPP_ts(roots_file,plot):
     rootStocks,rootNPP = field.read_soil_stocks_and_npp(roots_file)
-    N_collections = rootNPP[plot]['AccumulationDays'].shape[1]
-    collection_dates = []
-    NPP = []
-    NPP_std = []
-    for i in range(0,N_collections):
-        # check that there is a collection this year
-        if np.max(rootNPP[plot]['CollectionDate'][:,i])>np.datetime64('2000-01-01'):
-            collection_dates.append(np.max(rootNPP[plot]['CollectionDate'][:,i]))
-            previous_collection_dates.append(np.max(rootNPP[plot]['PreviousCollectionDate'][:,i]))
-            # avoid nodata for missing/destroyed traps
-            jj = np.isfinite(rootNPP[plot]['FineRootNPP'][:,i])
-            NPP.append(np.mean(rootNPP[plot]['FineRootNPP'][jj,i]))
-            NPP_std.append(np.std(rootNPP[plot]['FineRootNPP'][jj,i]))
-        
-    return np.asarray(collection_dates), np.asarray(previous_collection_dates), np.asarray(NPP), np.asarray(NPP_std)
-    
+
+    N_cores,N_collections = rootNPP[plot]['AccumulationDays'].shape
+    collection_dates = np.max(rootNPP[plot]['CollectionDate'],axis=0)
+    previous_collection_dates = np.max(rootNPP[plot]['PreviousCollectionDate'],axis=0)
+
+    interval = np.asarray(collection_dates-previous_collection_dates,dtype='float64')
+    days = np.cumsum(interval)
+
+    rootNPP_gapfilled = np.zeros((N_cores,N_dates))
+    for ss in range(0,N_cores):
+        # First check to see if there are gaps - if not, don't need to worry
+        if (np.isnan(rootNPP[plot]['FineRootNPP'][ss,:])).sum()==0:
+            rootNPP_gapfilled[ss,:]=rootNPP[plot]['FineRootNPP'][ss,:].copy()
+
+        # We don't want to gapfill at the start or end of the time series
+        # as we have no other constraints for the interpolation
+        else:
+            rootNPP_gapfilled[ss,:]=gapfill_field_data(rootNPP[plot]['FineRootNPP'][ss,:],days,pad_ts=pad_ts)
+
+    rootNPP_gapfilled[rootNPP_gapfilled<0]=0
+
+    rootNPP_ts = np.mean(rootNPP_gapfilled,axis=0)
+    rootNPP_std = np.std(rootNPP_gapfilled,axis=0)
+
+    return collection_dates, previous_collection_dates, rootNPP_ts, rootNPP_std
 
 # Note that later root stocks surveys are pretty irregular - suggest only using the first survey as these are comprehensive.
 def get_Croot(roots_file,plot):
@@ -46,6 +55,9 @@ def get_Croot(roots_file,plot):
     collection_date = rootStocks[plot]['CollectionDate'][0]
     return collection_date, Croot_plot, Croot_std
 
+# Get litterfall time series.  If pad_ts set to True (default), then nodata values at the ends of the time series for certain
+# subplots will be padded with the first or last recorded value, so that average litter fluxes are taken across all subplots.
+# This is an attempt to avoid biases in the averages, given that each 1 ha plot comprises only 25 subplots.
 def get_litterfall_ts(litter_file,plot, pad_ts = True):
     
     litter = field.read_litterfall_data(litter_file)
