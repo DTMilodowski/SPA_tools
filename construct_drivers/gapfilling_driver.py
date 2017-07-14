@@ -39,7 +39,7 @@ met_data_dict['swr'][mask]=np.nan
 
 
 minimum_pptn_rate = 0.5
-STA_LTA_threshold = 4.
+STA_LTA_threshold = 1.1
 gaps = gap.locate_metdata_gaps_using_soil_moisture_time_series(met_data_dict, soil_data_dict, minimum_pptn_rate, STA_LTA_threshold)
 
 
