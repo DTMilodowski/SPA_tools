@@ -14,7 +14,7 @@ import TRMM_processing as TRMM
 # function to read in the met data, soil data and remote sensing data, so that they are all hosted
 # in equivalent time series that can be cross-interrogated in preparation for gapfilling.
 # The timestep is set in hours and by default is 0.5, which is ideal for running SPA
-def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_date, tstep = 0.5):
+def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_date, tstep = 0.5, distribute_uniformly = True):
     met_data_dict = {}
     soil_data_dict = {} 
     RS_data_dict = {}
@@ -67,7 +67,11 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
     # Now read in TRMM
     print "\t3 - loading TRMM precipitation data"
     TRMM_dates_init, TRMM_pptn_init = TRMM.read_TRMM_file(TRMM_file)
-    TRMM_pptn = TRMM.calc_pptn_specify_tstep(TRMM_pptn_init,tstep)
+
+    if distribute_uniformly:
+        TRMM_pptn = calc_TRMM_specify_tstep_uniform(pptn, tstep)
+    else:
+        TRMM_pptn = TRMM.calc_pptn_specify_tstep(TRMM_pptn_init,tstep)
 
     n_tsteps_TRMM = TRMM_pptn.size
     TRMM_dates = np.zeros(n_tsteps_TRMM).astype('datetime64[m]')
@@ -76,27 +80,35 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
         TRMM_dates[i]=TRMM_dates_init[0]+np.timedelta64(time_increment,'m')
 
     #---------------------------------------------------------------------------------------------
-    # Now use average daily climatology to temporally downscale RS data to specified timestep
-    print "\t4 - use average day climatology to downsample met data to specified timestep"
-    # i) Get "average" conditions from met station
-    time_in_hours, average_day_pptn, average_day_airT, average_day_RH, average_day_VPD, average_day_PAR, = met.retrieve_monthly_climatology(dates_series,met_data_host)
+    if distribute_uniformly:
+        swr_mod = calc_sw_specify_tstep_uniform(sw_era, tstep, annual_average_day_PAR)
+        PAR_mod = swr_mod*2.3
+        airT_mod = calc_airT_specify_tstep_uniform(airT_era, tstep, annual_average_day_airT)
+        rh_mod = calc_rh_specify_tstep_uniform(rh_era, tstep, annual_average_day_RH)
+        vpd_mod =calc_airT_specify_tstep_uniform(vpd_era, tstep, annual_average_day_vpd)
+        sp_mod = calc_sp_specify_tstep_uniform(sp_era, tstep)
+    else:
+        # Now use average daily climatology to temporally downscale RS data to specified timestep
+        print "\t4 - use average day climatology to downsample met data to specified timestep"
+        # i) Get "average" conditions from met station
+        time_in_hours, average_day_pptn, average_day_airT, average_day_RH, average_day_VPD, average_day_PAR, = met.retrieve_monthly_climatology(dates_series,met_data_host)
 
-    # ii) filter these average signals using a moving average
-    window_half_width = 1
-    boundary_flag = 1 # periodic
-    annual_average_day_pptn=met.moving_average_1D(np.mean(average_day_pptn,axis=0),window_half_width,boundary_flag)
-    annual_average_day_airT=met.moving_average_1D(np.mean(average_day_airT,axis=0),window_half_width,boundary_flag)
-    annual_average_day_RH=met.moving_average_1D(np.mean(average_day_RH,axis=0),window_half_width,boundary_flag)
-    annual_average_day_PAR=met.moving_average_1D(np.mean(average_day_PAR,axis=0),window_half_width,boundary_flag)
-    annual_average_day_vpd=met.moving_average_1D(np.mean(average_day_VPD,axis=0),window_half_width,boundary_flag)
+        # ii) filter these average signals using a moving average
+        window_half_width = 1
+        boundary_flag = 1 # periodic
+        annual_average_day_pptn=met.moving_average_1D(np.mean(average_day_pptn,axis=0),window_half_width,boundary_flag)
+        annual_average_day_airT=met.moving_average_1D(np.mean(average_day_airT,axis=0),window_half_width,boundary_flag)
+        annual_average_day_RH=met.moving_average_1D(np.mean(average_day_RH,axis=0),window_half_width,boundary_flag)
+        annual_average_day_PAR=met.moving_average_1D(np.mean(average_day_PAR,axis=0),window_half_width,boundary_flag)
+        annual_average_day_vpd=met.moving_average_1D(np.mean(average_day_VPD,axis=0),window_half_width,boundary_flag)
 
-    # iii) use these averages to model RS metdata at specified timestep
-    swr_mod = wg.calc_sw_specify_tstep_with_climatology(sw_era, tstep, annual_average_day_PAR)
-    PAR_mod = swr_mod*2.3
-    airT_mod = wg.calc_airT_specify_tstep_with_climatology(airT_era, tstep, annual_average_day_airT)
-    rh_mod = wg.calc_rh_specify_tstep_with_climatology(rh_era, tstep, annual_average_day_RH)
-    vpd_mod =wg.calc_airT_specify_tstep_with_climatology(vpd_era, tstep, annual_average_day_vpd)
-    sp_mod = wg.calc_sp_specify_tstep_linear(sp_era, tstep)
+        # iii) use these averages to model RS metdata at specified timestep
+        swr_mod = wg.calc_sw_specify_tstep_with_climatology(sw_era, tstep, annual_average_day_PAR)
+        PAR_mod = swr_mod*2.3
+        airT_mod = wg.calc_airT_specify_tstep_with_climatology(airT_era, tstep, annual_average_day_airT)
+        rh_mod = wg.calc_rh_specify_tstep_with_climatology(rh_era, tstep, annual_average_day_RH)
+        vpd_mod =wg.calc_airT_specify_tstep_with_climatology(vpd_era, tstep, annual_average_day_vpd)
+        sp_mod = wg.calc_sp_specify_tstep_linear(sp_era, tstep)
 
     #---------------------------------------------------------------------------------------------
     # Now the data has been prepared, position data on equivalent time series clipped to specified
@@ -345,7 +357,7 @@ def calc_sw_specify_tstep_uniform(sw, tstep):
 # output:3 hourly precipitation  at tstep required, and equivalent but for
 # precipitation distributed evenly through each day - I grab both as if one is
 # not important, it won't be a strong component of the random forest regressor
-def calc_TRMM_specify_tstep_uniform(sw, tstep):
+def calc_TRMM_specify_tstep_uniform(pptn, tstep):
    # convert 3 hourly precipitation (in mm/hr) to specified timestep, output units are mm
     n_tsteps_in = pptn_in.size
     tstep_in = 3.
