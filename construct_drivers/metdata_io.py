@@ -207,8 +207,176 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
     return met_data_dict, soil_data_dict, RS_data_dict
 
 
+#==========================================================================================
+# stuff to prep data for ingestion into random forest algorithm - i.e. daily uniform
+# distributions of EO parameters
+#------------------------------------
+# ERA-Interim datasets
+# Temperature and relative humidity and surface pressure
+# These are quarterly instantaneous measurements.  For each timestep, useful to know current
+# temperature and temperature either side.
+# 
+def calc_airT_specify_tstep_uniform(airt, tstep):
+      n_days_eraint = airt.size/4
+
+      # timesteps at 00:00, 06:00, 12:00, 18:00
+      # Therefore, for final timestep, assume that midnight temperature matches previous day
+      # and for first timetep, previous temperature matches 18:00 temperature from same day
+      airt_prev = np.roll(airt,1)
+      airt_prev[0] = airt[3]
+      airt_next = np.roll(airt,-1)
+      airt_next[-1] = airt[-4]
+
+      n_tsteps = int(n_days_eraint*24/tstep)
+      airt_out = np.zeros(n_tsteps)
+      airt_p_out = np.zeros(n_tsteps)
+      airt_n_out = np.zeros(n_tsteps)
+
+      counter = 0
+      index = 0
+      tsteps_in_quarter = int(6/tstep)
+      
+      for tt in range(0,n_tsteps):
+            airt_out[tt]=airt[index]
+            airt_p_out[tt]=airt_prev[index]
+            airt_n_out[tt]=airt_next[index]
+            counter+=1
+            if counter >= tsteps_in_quarter:
+                  # reached end of time segment, so restart counter and increment index
+                  index+=1
+                  counter=0
+
+      return airt_out, airt_p_out, airt_n_out
 
 
+def calc_rh_specify_tstep_uniform(rh, tstep):
+      n_days_eraint = rh.size/4
+      # timesteps at 00:00, 06:00, 12:00, 18:00
+      # Therefore, for final timestep, assume that midnight Rh matches previous day
+      # and for first timetep, previous Rh matches 18:00 Rh from same day
+      rh_prev = np.roll(rh,1)
+      rh_prev[0] = rh[3]
+      rh_next = np.roll(rh,-1)
+      rh_next[-1] = rh[-4]
+
+      n_tsteps = int(n_days_eraint*24/tstep)
+      rh_out = np.zeros(n_tsteps)
+      rh_p_out = np.zeros(n_tsteps)
+      rh_n_out = np.zeros(n_tsteps)
+
+      counter = 0
+      index = 0
+      tsteps_in_quarter = int(6/tstep)
+      
+      for tt in range(0,n_tsteps):
+            rh_out[tt]=rh[index]
+            rh_p_out[tt]=rh_prev[index]
+            rh_n_out[tt]=rh_next[index]
+            counter+=1
+            if counter >= tsteps_in_quarter:
+                  # reached end of time segment, so restart counter and increment index
+                  index+=1
+                  counter=0
+
+      return rh_out,rh_p_out,rh_n_out
+
+def calc_sp_specify_tstep_uniform(sp, tstep):
+      n_days_eraint = sp.size/4
+      # timesteps at 00:00, 06:00, 12:00, 18:00
+      sp_prev = np.roll(sp,1)
+      sp_prev[0] = sp[3]
+      sp_next = np.roll(sp,-1)
+      sp_next[-1] = sp[-4]
+
+      n_tsteps = int(n_days_eraint*24/tstep)
+      sp_out = np.zeros(n_tsteps)
+      sp_p_out = np.zeros(n_tsteps)
+      sp_n_out = np.zeros(n_tsteps)
+
+      counter = 0
+      index = 0
+      tsteps_in_quarter = int(6/tstep)
+      
+      for tt in range(0,n_tsteps):
+            sp_out[tt]=sp_temp[index]
+            sp_p_out[tt]=sp_prev[index]
+            sp_n_out[tt]=sp_next[index]
+            counter+=1
+            if counter >= tsteps_in_quarter:
+                  # reached end of time segment, so restart counter and increment index
+                  index+=1
+                  counter=0
+
+      return sp_out,sp_p_out,sp_n_out
+
+# shortwave radiation
+# These are 12 hour cumulative totals, distributed uniformly for ingestion into random forest.
+def calc_sw_specify_tstep_uniform(sw, tstep):
+      n_days_eraint = sw.size/2
+
+      n_tsteps = int(n_days_eraint*24/tstep)
+      sw_out = np.zeros(n_tsteps)
+
+      counter = 0
+      index = 0
+      tsteps_in_half = int(12/tstep)
+      seconds_in_tstep = tstep*60.*60.
+      
+      for tt in range(0,n_tsteps):
+            if counter < tsteps_in_half:
+                  sw_out[tt]=sw[index]/(float(tsteps_in_half)*seconds_in_tstep)
+                  counter+=1
+            else:
+                  # reached end of time segment, so restart counter and increment index:
+                  counter=0
+                  index+=1
+                  # divide by number of timesteps in half multiplied by number of seconds in a timestep to give average flux in time segment
+                  sw_out[tt]=sw[index]/(float(tsteps_in_half)*seconds_in_tstep)
+                  counter+=1
+      
+      return sw_out
+
+#------------------------------------
+# TRMM
+# Precipitation likely to be weakly correlated at sub-daily timestep, aggregate
+# over 24 hour timestep - precipitation will then be allocated based on other
+# data
+# input: 3 hourly precipitation (in mm/hr)
+# output:3 hourly precipitation  at tstep required, and equivalent but for
+# precipitation distributed evenly through each day - I grab both as if one is
+# not important, it won't be a strong component of the random forest regressor
+def calc_TRMM_specify_tstep_uniform(sw, tstep):
+   # convert 3 hourly precipitation (in mm/hr) to specified timestep, output units are mm
+    n_tsteps_in = pptn_in.size
+    tstep_in = 3.
+    # input data at three hours temporal resolution
+    n_tsteps_out = int(n_tsteps_in*tstep_in/tstep_out)
+    pptn_out = np.zeros(n_tsteps_out)
+    pptn_day_out = np.zeros(n_tsteps_out)
+    tstep_d = 24/tstep_out
+    
+    counter = 0.
+    index = 0
+      
+    for tt in range(0,n_tsteps_out):
+        if counter < tstep_in:
+            pptn_out[tt]=pptn_in[index]*tstep_out
+            counter+=tstep_out
+        else:
+            # reached end of time segment, so restart counter and increment index:
+            counter=0.
+            index+=1
+            pptn_out[tt]=pptn_in[index]*tstep_out
+            counter+=tstep_out
+
+    for tt in range(0,n_tsteps_out/tstep_d):
+        pptn_day_out[tt*tstep_d:(tt+1)*tstep_d]=np.mean(pptn[tt*tstep_d:(tt+1)*tstep_d])
+
+    return pptn_out, pptn_day_out
+
+
+#======================================================================================
+## DATA OUTPUT
 # Write some output files
 def write_metdata_to_SPA_input(MetDir,MetName,MetData,gaps,tstep_mins=30.):
 
