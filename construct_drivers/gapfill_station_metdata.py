@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 import datetime as dt
 from matplotlib import rcParams
 from scipy import signal
+from sklearn.ensemble import RandomForestRegressor
 
 import sys
 sys.path.append("/home/dmilodow/DataStore_DTM/BALI/MetDataProcessing/ERAinterim/")
