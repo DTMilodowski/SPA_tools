@@ -67,11 +67,7 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
     # Now read in TRMM
     print "\t3 - loading TRMM precipitation data"
     TRMM_dates_init, TRMM_pptn_init = TRMM.read_TRMM_file(TRMM_file)
-
-    if distribute_uniformly:
-
-    else:
-        TRMM_pptn = TRMM.calc_pptn_specify_tstep(TRMM_pptn_init,tstep)
+    TRMM_pptn = TRMM.calc_pptn_specify_tstep(TRMM_pptn_init,tstep)
 
     n_tsteps_TRMM = TRMM_pptn.size
     TRMM_dates = np.zeros(n_tsteps_TRMM).astype('datetime64[m]')
@@ -211,7 +207,7 @@ def load_all_metdata(met_file, soil_file, ERA_file, TRMM_file, start_date, end_d
     return met_data_dict, soil_data_dict, RS_data_dict
 
 
-
+#------------------------------------------------------------------------------------------------------------------
 def load_all_metdata_for_randomforest(met_file, soil_file, ERA_file, TRMM_file, start_date, end_date, tstep = 0.5):
     met_data_dict = {}
     soil_data_dict = {} 
@@ -265,7 +261,7 @@ def load_all_metdata_for_randomforest(met_file, soil_file, ERA_file, TRMM_file, 
     # Now read in TRMM
     print "\t3 - loading TRMM precipitation data"
     TRMM_dates_init, TRMM_pptn_init = TRMM.read_TRMM_file(TRMM_file)
-    TRMM_pptn, TRMM_d_pptn = calc_TRMM_specify_tstep_uniform(pptn, tstep)
+    TRMM_pptn, TRMM_d_pptn = calc_TRMM_specify_tstep_uniform(TRMM_pptn_init, tstep)
     
     n_tsteps_TRMM = TRMM_pptn.size
     TRMM_dates = np.zeros(n_tsteps_TRMM).astype('datetime64[m]')
@@ -275,12 +271,12 @@ def load_all_metdata_for_randomforest(met_file, soil_file, ERA_file, TRMM_file, 
 
     #---------------------------------------------------------------------------------------------
     print "\t4 - resampling"
-    swr_mod = calc_sw_specify_tstep_uniform(sw_era, tstep, annual_average_day_PAR)
+    swr_mod = calc_sw_specify_tstep_uniform(sw_era, tstep)
     PAR_mod = swr_mod*2.3
-    airT_mod,airT_mod_p,airT_mod_n= calc_airT_specify_tstep_uniform(airT_era, tstep, annual_average_day_airT)
-    rh_mod,rh_mod_p,rh_mod_n = calc_rh_specify_tstep_uniform(rh_era, tstep, annual_average_day_RH)
-    vpd_mod,vpd_mod_p,vpd_mod_n =calc_airT_specify_tstep_uniform(vpd_era, tstep, annual_average_day_vpd)
-    sp_mod, sp_mod_p, sp_mod_n = calc_sp_specify_tstep_uniform(sp_era, tstep)
+    airT_mod,airT_p_mod,airT_n_mod= calc_airT_specify_tstep_uniform(airT_era, tstep)
+    rh_mod,rh_p_mod,rh_n_mod = calc_rh_specify_tstep_uniform(rh_era, tstep)
+    vpd_mod,vpd_p_mod,vpd_n_mod =calc_airT_specify_tstep_uniform(vpd_era, tstep)
+    sp_mod, sp_p_mod, sp_n_mod = calc_sp_specify_tstep_uniform(sp_era, tstep)
 
     #---------------------------------------------------------------------------------------------
     # Now the data has been prepared, position data on equivalent time series clipped to specified
@@ -336,16 +332,12 @@ def load_all_metdata_for_randomforest(met_file, soil_file, ERA_file, TRMM_file, 
     rh_n_RS = np.zeros(N_tsteps_out)*np.nan
     rh_p_RS = np.zeros(N_tsteps_out)*np.nan
     PAR_RS = np.zeros(N_tsteps_out)*np.nan
-    PAR_p_RS = np.zeros(N_tsteps_out)*np.nan
-    PAR_n_RS = np.zeros(N_tsteps_out)*np.nan
     vpd_RS = np.zeros(N_tsteps_out)*np.nan
     vpd_p_RS = np.zeros(N_tsteps_out)*np.nan
     vpd_n_RS = np.zeros(N_tsteps_out)*np.nan
     BP_RS = np.zeros(N_tsteps_out)*np.nan
     BP_p_RS = np.zeros(N_tsteps_out)*np.nan
     BP_n_RS = np.zeros(N_tsteps_out)*np.nan
-    swr_p_RS = np.zeros(N_tsteps_out)*np.nan
-    swr_n_RS = np.zeros(N_tsteps_out)*np.nan
     swr_RS = np.zeros(N_tsteps_out)*np.nan
 
     print "\t\t remote sensing data"
@@ -409,12 +401,23 @@ def load_all_metdata_for_randomforest(met_file, soil_file, ERA_file, TRMM_file, 
     soil_data_dict['soil_moisture_20cm'] = soil_moisture_20cm.copy()
     
     RS_data_dict['date'] = output_time_series.copy()
+    RS_data_dict['time'] = (output_time_series-output_time_series.astype('datetime64[D]').astype(output_time_series.dtype)).astype(float)
+    RS_data_dict['day'] = (output_time_series.astype('datetime64[D]')-output_time_series.astype('datetime64[Y]').astype(output_time_series.dtype)).astype(float)+1.
     RS_data_dict['airT'] = airT_RS.copy()
+    RS_data_dict['airT_n'] = airT_n_RS.copy()
+    RS_data_dict['airT_p'] = airT_p_RS.copy()
     RS_data_dict['pptn'] = pptn_RS.copy()
+    RS_data_dict['pptn_d'] = pptn_d_RS.copy()
     RS_data_dict['rh'] = rh_RS.copy()
+    RS_data_dict['rh_n'] = rh_n_RS.copy()
+    RS_data_dict['rh_p'] = rh_p_RS.copy()
     RS_data_dict['PAR'] = PAR_RS.copy()
     RS_data_dict['vpd'] = vpd_RS.copy()
+    RS_data_dict['vpd_n'] = vpd_n_RS.copy()
+    RS_data_dict['vpd_p'] = vpd_p_RS.copy()
     RS_data_dict['BP'] = BP_RS.copy()
+    RS_data_dict['BP_n'] = BP_n_RS.copy()
+    RS_data_dict['BP_p'] = BP_p_RS.copy()
     RS_data_dict['swr'] = swr_RS.copy()
 
     return met_data_dict, soil_data_dict, RS_data_dict
@@ -511,7 +514,7 @@ def calc_sp_specify_tstep_uniform(sp, tstep):
       tsteps_in_quarter = int(6/tstep)
       
       for tt in range(0,n_tsteps):
-            sp_out[tt]=sp_temp[index]
+            sp_out[tt]=sp[index]
             sp_p_out[tt]=sp_prev[index]
             sp_n_out[tt]=sp_next[index]
             counter+=1
@@ -558,7 +561,7 @@ def calc_sw_specify_tstep_uniform(sw, tstep):
 # output:3 hourly precipitation  at tstep required, and equivalent but for
 # precipitation distributed evenly through each day - I grab both as if one is
 # not important, it won't be a strong component of the random forest regressor
-def calc_TRMM_specify_tstep_uniform(pptn, tstep):
+def calc_TRMM_specify_tstep_uniform(pptn_in, tstep_out):
    # convert 3 hourly precipitation (in mm/hr) to specified timestep, output units are mm
     n_tsteps_in = pptn_in.size
     tstep_in = 3.
@@ -566,11 +569,9 @@ def calc_TRMM_specify_tstep_uniform(pptn, tstep):
     n_tsteps_out = int(n_tsteps_in*tstep_in/tstep_out)
     pptn_out = np.zeros(n_tsteps_out)
     pptn_day_out = np.zeros(n_tsteps_out)
-    tstep_d = 24/tstep_out
     
     counter = 0.
     index = 0
-      
     for tt in range(0,n_tsteps_out):
         if counter < tstep_in:
             pptn_out[tt]=pptn_in[index]*tstep_out
@@ -582,9 +583,16 @@ def calc_TRMM_specify_tstep_uniform(pptn, tstep):
             pptn_out[tt]=pptn_in[index]*tstep_out
             counter+=tstep_out
 
-    for tt in range(0,n_tsteps_out/tstep_d):
-        pptn_day_out[tt*tstep_d:(tt+1)*tstep_d]=np.mean(pptn[tt*tstep_d:(tt+1)*tstep_d])
+    tstep_d =int(24/tstep_out)
+    ndays = int(n_tsteps_out/tstep_d)+1
 
+    for tt in range(0,ndays):
+        start=tt*tstep_d
+        end=(tt+1)*tstep_d
+        if end > n_tsteps_out:
+            end=n_tsteps_out
+        if start < n_tsteps_out:
+            pptn_day_out[start:end]=np.mean(pptn_out[start:end])
     return pptn_out, pptn_day_out
 
 
