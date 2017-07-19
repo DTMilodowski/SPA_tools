@@ -401,8 +401,8 @@ def load_all_metdata_for_randomforest(met_file, soil_file, ERA_file, TRMM_file, 
     soil_data_dict['soil_moisture_20cm'] = soil_moisture_20cm.copy()
     
     RS_data_dict['date'] = output_time_series.copy()
-    RS_data_dict['time'] = (output_time_series-output_time_series.astype('datetime64[D]').astype(output_time_series.dtype)).astype(float)
-    RS_data_dict['day'] = (output_time_series.astype('datetime64[D]')-output_time_series.astype('datetime64[Y]').astype(output_time_series.dtype)).astype(float)+1.
+    RS_data_dict['time'] = (output_time_series-output_time_series.astype('datetime64[D]').astype(output_time_series.dtype)).astype('timedelta64[m]').astype('float')/60.
+    RS_data_dict['day'] = (output_time_series.astype('datetime64[D]')-output_time_series.astype('datetime64[Y]').astype(output_time_series.dtype)).astype('timedelta64[D]').astype(float)+1.
     RS_data_dict['airT'] = airT_RS.copy()
     RS_data_dict['airT_n'] = airT_n_RS.copy()
     RS_data_dict['airT_p'] = airT_p_RS.copy()
