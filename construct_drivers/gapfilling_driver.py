@@ -65,7 +65,7 @@ SPAMetDir = './'#'/home/dmilodow/DataStore_DTM/BALI/SPA_BALI_data_and_analysis/S
 SPAMetName_RS = 'BALI_ERAinterim_TRMM_30mins_v2.csv'
 SPAMetName_local = 'BALI_gapfilled_met_station_30mins_v2.csv'
 
-gap.write_metdata_to_SPA_input(SPAMetDir,SPAMetName_local,gapfilled_met_data,gaps)
+io.write_metdata_to_SPA_input(SPAMetDir,SPAMetName_local,gapfilled_met_data,gaps)
 
 # create list of zeros for gaps in RS data, since these records are continuous.
 gaps_RS = {}
@@ -74,5 +74,5 @@ N = RS_data_dict['date'].size
 for vv in range(0,len(gap_vars)):
     gaps_RS[gap_vars[vv]]=np.zeros(N)
 
-gap.write_metdata_to_SPA_input(SPAMetDir,SPAMetName_RS,RS_data_dict,gaps_RS)
+io.write_metdata_to_SPA_input(SPAMetDir,SPAMetName_RS,RS_data_dict,gaps_RS)
 
