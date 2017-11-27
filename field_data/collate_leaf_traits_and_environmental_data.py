@@ -65,7 +65,7 @@ lidar_pts = None
 
 # Load in the traits
 cleaning_scheme = 1 # 0 = mine, 1 = Sabine's, 2 = conservative
-branch, spp, genus, N, Narea, C, CNratio, SLA, LMA, LeafArea, LeafThickness, LeafHeight, VPD, Rd, Vcmax, Jmax, ShadeTag, ftype = field.collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_file,cleaning_scheme)
+branch, spp, genus, N, Narea, C, CNratio, SLA, LMA, LeafArea, LeafThickness, LeafHeight, VPD, Rd, Vcmax, Jmax, ShadeTag, gs, ftype = field.collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_file,cleaning_scheme)
 
 # Filter traits data
 LeafThickness[LeafThickness>0.60]=np.nan
@@ -135,14 +135,14 @@ for i in range(0,N_branches):
         tree_pts = lidar.filter_lidar_data_by_neighbourhood(plot_pts[plot[i]],tree_xy,radius)
         if tree_pts.size > 0:
             heights,first_return_profile,n_ground_returns = LAD.bin_returns(tree_pts, max_height,layer_thickness)
-            LAD_tree = LAD.estimate_LAD_MacArtherHorn(first_return_profile, n_ground_returns, layer_thickness, 1.)
+            LAD_tree = LAD.estimate_LAD_MacArthurHorn(first_return_profile, n_ground_returns, layer_thickness, 1.)
             I_tree=clim.estimate_canopy_light_transmittance(LAD_tree,heights,k)
             """
             # subplot based profile
             subplot_poly = subplot_polygons[plot[i]][subplot_labels[plot[i]] == subplot[i],:,:][0]
             sp_pts = lidar.filter_lidar_data_by_polygon(plot_pts[plot[i]],subplot_poly)
             heights_sp,first_return_profile_sp,n_ground_returns_sp = LAD.bin_returns(sp_pts, max_height,layer_thickness)
-            LAD_sp = LAD.estimate_LAD_MacArtherHorn(first_return_profile_sp, n_ground_returns_sp, layer_thickness, 1.)
+            LAD_sp = LAD.estimate_LAD_MacArthurHorn(first_return_profile_sp, n_ground_returns_sp, layer_thickness, 1.)
             I_sp=clim.estimate_canopy_light_transmittance(LAD_sp,heights_sp,k)
             """
             if np.isfinite(LeafHeight[i]):
@@ -164,7 +164,7 @@ for i in range(0,N_branches):
         tree_pts = lidar.filter_lidar_data_by_polygon(plot_pts[plot[i]],subplot_poly)
         if tree_pts.size > 0:
             heights,first_return_profile,n_ground_returns = LAD1.bin_returns(tree_pts, max_height,layer_thickness)
-            LAD_subplot = LAD.estimate_LAD_MacArtherHorn(first_return_profile, n_ground_returns, layer_thickness, 1.)
+            LAD_subplot = LAD.estimate_LAD_MacArthurHorn(first_return_profile, n_ground_returns, layer_thickness, 1.)
             I_subplot=clim.estimate_canopy_light_transmittance(LAD_subplot,heights,k)
             if np.isfinite(LeafHeight[i]):
                 ht_index = int(LeafHeight[i])
@@ -215,7 +215,7 @@ for i in range(0,len(plots)):
 
 """
 
-
+"""
 
 # Figure 4 - vertical distribution of leaf traits in terms of light availability rather than leaf height per se:
 # Vcmax, Rd, N,
@@ -615,4 +615,531 @@ ax1.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor
 ax1.set_ylabel('Height / m')
 ax1.set_xlabel('light_availability')
 plt.savefig('height_vs_light.png')
+plt.show()
+
+
+"""
+
+
+# Figure 6 - vertical distribution of chemo-photosynthetic leaf traits in terms of light availability and leaf height, for comparison:
+# Vcmax, Rd, N,
+plt.figure(6, facecolor='White',figsize=[6,9])
+
+# axis 2 - height vs. Vcmax
+ax1 = plt.subplot2grid((3,2),(1,0))
+ax1.annotate('c', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
+
+mask = ~np.isnan(Vcmax[ftype=='OG']) & ~np.isnan(LeafHeight[ftype=='OG'])
+m1, c1, r1, p1, err1 = stats.linregress(Vcmax[ftype=='OG'][mask],LeafHeight[ftype=='OG'][mask])
+mask = ~np.isnan(Vcmax[ftype=='SL']) & ~np.isnan(LeafHeight[ftype=='SL'])
+m2, c2, r2, p2, err2 = stats.linregress(Vcmax[ftype=='SL'][mask],LeafHeight[ftype=='SL'][mask])
+mask = ~np.isnan(Vcmax) & ~np.isnan(LeafHeight)
+m, c, r, p, err = stats.linregress(Vcmax[mask],LeafHeight[mask])
+
+ax1.plot(Vcmax[ftype=='OG'],LeafHeight[ftype=='OG'],'.',color='blue')
+ax1.plot(Vcmax[ftype=='SL'],LeafHeight[ftype=='SL'],'.',color='red')
+
+p1str=''
+if p1<0.001:
+    p1str='***'
+elif p1<0.01:
+    p1str='** '
+elif p1<0.05:
+    p1str='*  '
+elif p1<0.1:
+    p1str='$^.$  '
+else:
+    p1str='   '
+
+p2str=''
+if p2<0.001:
+    p2str='***'
+elif p2<0.01:
+    p2str='** '
+elif p2<0.05:
+    p2str='*  '
+elif p2<0.1:
+    p2str='$^.$  '
+else:
+    p2str='   '
+
+pstr=''
+if p<0.001:
+    pstr='***'
+elif p<0.01:
+    pstr='** '
+elif p<0.05:
+    pstr='*  '
+elif p<0.1:
+    pstr='$^.$  '
+else:
+    pstr='   '
+
+
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str + '\nR$^2$=' + '%.3f' % r**2 + pstr
+ax1.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
+
+ax1.set_ylabel('Leaf Height / m')
+ax1.set_xlabel('$V_{cmax}$')
+
+
+# axis 2 - light availability vs. Vcmax
+ax1b = plt.subplot2grid((3,2),(1,1))
+ax1b.annotate('d', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
+
+mask = ~np.isnan(Vcmax[ftype=='OG']) & ~np.isnan(light_availability[ftype=='OG'])
+m1, c1, r1, p1, err1 = stats.linregress(Vcmax[ftype=='OG'][mask],light_availability[ftype=='OG'][mask])
+mask = ~np.isnan(Vcmax[ftype=='SL']) & ~np.isnan(light_availability[ftype=='SL'])
+m2, c2, r2, p2, err2 = stats.linregress(Vcmax[ftype=='SL'][mask],light_availability[ftype=='SL'][mask])
+mask = ~np.isnan(Vcmax) & ~np.isnan(light_availability)
+m, c, r, p, err = stats.linregress(Vcmax[mask],light_availability[mask])
+
+ax1b.plot(Vcmax[ftype=='OG'],light_availability[ftype=='OG'],'.',color='blue')
+ax1b.plot(Vcmax[ftype=='SL'],light_availability[ftype=='SL'],'.',color='red')
+
+p1str=''
+if p1<0.001:
+    p1str='***'
+elif p1<0.01:
+    p1str='** '
+elif p1<0.05:
+    p1str='*  '
+elif p1<0.1:
+    p1str='$^.$  '
+else:
+    p1str='   '
+
+p2str=''
+if p2<0.001:
+    p2str='***'
+elif p2<0.01:
+    p2str='** '
+elif p2<0.05:
+    p2str='*  '
+elif p2<0.1:
+    p2str='$^.$  '
+else:
+    p2str='   '
+
+pstr=''
+if p<0.001:
+    pstr='***'
+elif p<0.01:
+    pstr='** '
+elif p<0.05:
+    pstr='*  '
+elif p<0.1:
+    pstr='$^.$  '
+else:
+    pstr='   '
+
+
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str + '\nR$^2$=' + '%.3f' % r**2 + pstr
+ax1b.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
+
+ax1b.set_ylabel('Light availability')
+ax1b.set_xlabel('$V_{cmax}$')
+
+
+# Axis 2 Rd vs height
+ax2 = plt.subplot2grid((3,2),(2,0),sharey=ax1)
+ax2.annotate('e', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
+ax2.plot(Rd[ftype=='OG'],LeafHeight[ftype=='OG'],'.',color='blue')
+ax2.plot(Rd[ftype=='SL'],LeafHeight[ftype=='SL'],'.',color='red')
+
+mask = ~np.isnan(Rd[ftype=='OG']) & ~np.isnan(LeafHeight[ftype=='OG'])
+m1, c1, r1, p1, err1 = stats.linregress(Rd[ftype=='OG'][mask],LeafHeight[ftype=='OG'][mask])
+mask = ~np.isnan(Rd[ftype=='SL']) & ~np.isnan(LeafHeight[ftype=='SL'])
+m2, c2, r2, p2, err2 = stats.linregress(Rd[ftype=='SL'][mask],LeafHeight[ftype=='SL'][mask])
+mask = ~np.isnan(Rd) & ~np.isnan(LeafHeight)
+m, c, r, p, err = stats.linregress(Rd[mask],LeafHeight[mask])
+p1str=''
+if p1<0.001:
+    p1str='***'
+elif p1<0.01:
+    p1str='** '
+elif p1<0.05:
+    p1str='*  '
+elif p1<0.1:
+    p1str='$^.$  '
+else:
+    p1str='   '
+
+p2str=''
+if p2<0.001:
+    p2str='***'
+elif p2<0.01:
+    p2str='** '
+elif p2<0.05:
+    p2str='*  '
+elif p2<0.1:
+    p2str='$^.$  '
+else:
+    p2str='   '
+
+
+pstr=''
+if p<0.001:
+    pstr='***'
+elif p<0.01:
+    pstr='** '
+elif p<0.05:
+    pstr='*  '
+elif p<0.1:
+    pstr='$^.$  '
+else:
+    pstr='   '
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str + '\nR$^2$=' + '%.3f' % r**2 + pstr
+ax2.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
+
+ax2.set_ylabel('Leaf Height / m')
+ax2.set_xlabel('$R_d$')
+
+# Axis 2b Rd vs light availability
+ax2b = plt.subplot2grid((3,2),(2,1),sharey=ax1b)
+ax2b.annotate('f', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
+ax2b.plot(Rd[ftype=='OG'],light_availability[ftype=='OG'],'.',color='blue')
+ax2b.plot(Rd[ftype=='SL'],light_availability[ftype=='SL'],'.',color='red')
+
+mask = ~np.isnan(Rd[ftype=='OG']) & ~np.isnan(light_availability[ftype=='OG'])
+m1, c1, r1, p1, err1 = stats.linregress(Rd[ftype=='OG'][mask],light_availability[ftype=='OG'][mask])
+mask = ~np.isnan(Rd[ftype=='SL']) & ~np.isnan(light_availability[ftype=='SL'])
+m2, c2, r2, p2, err2 = stats.linregress(Rd[ftype=='SL'][mask],light_availability[ftype=='SL'][mask])
+mask = ~np.isnan(Rd) & ~np.isnan(light_availability)
+m, c, r, p, err = stats.linregress(Rd[mask],light_availability[mask])
+p1str=''
+if p1<0.001:
+    p1str='***'
+elif p1<0.01:
+    p1str='** '
+elif p1<0.05:
+    p1str='*  '
+elif p1<0.1:
+    p1str='$^.$  '
+else:
+    p1str='   '
+
+p2str=''
+if p2<0.001:
+    p2str='***'
+elif p2<0.01:
+    p2str='** '
+elif p2<0.05:
+    p2str='*  '
+elif p2<0.1:
+    p2str='$^.$  '
+else:
+    p2str='   '
+
+
+pstr=''
+if p<0.001:
+    pstr='***'
+elif p<0.01:
+    pstr='** '
+elif p<0.05:
+    pstr='*  '
+elif p<0.1:
+    pstr='$^.$  '
+else:
+    pstr='   '
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str + '\nR$^2$=' + '%.3f' % r**2 + pstr
+ax2b.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
+
+ax2b.set_ylabel('Light availability')
+ax2b.set_xlabel('$R_d$')
+
+
+# Axis 3 height vs Narea
+ax3 = plt.subplot2grid((3,2),(0,0),sharey=ax1)
+ax3.annotate('a', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
+ax3.plot(Narea[ftype=='OG'],LeafHeight[ftype=='OG'],'.',color='blue')
+ax3.plot(Narea[ftype=='SL'],LeafHeight[ftype=='SL'],'.',color='red')
+
+mask = ~np.isnan(Narea[ftype=='OG']) & ~np.isnan(LeafHeight[ftype=='OG'])
+m1, c1, r1, p1, err1 = stats.linregress(Narea[ftype=='OG'][mask],LeafHeight[ftype=='OG'][mask])
+mask = ~np.isnan(Narea[ftype=='SL']) & ~np.isnan(LeafHeight[ftype=='SL'])
+m2, c2, r2, p2, err2 = stats.linregress(Narea[ftype=='SL'][mask],LeafHeight[ftype=='SL'][mask])
+mask = ~np.isnan(Narea) & ~np.isnan(LeafHeight)
+m, c, r, p, err = stats.linregress(Narea[mask],LeafHeight[mask])
+p1str=''
+if p1<0.001:
+    p1str='***'
+elif p1<0.01:
+    p1str='** '
+elif p1<0.05:
+    p1str='*  '
+elif p1<0.1:
+    p1str='$^.$  '
+else:
+    p1str='   '
+
+p2str=''
+if p2<0.001:
+    p2str='***'
+elif p2<0.01:
+    p2str='** '
+elif p2<0.05:
+    p2str='*  '
+elif p2<0.1:
+    p2str='$^.$  '
+else:
+    p2str='   '
+
+pstr=''
+if p<0.001:
+    pstr='***'
+elif p<0.01:
+    pstr='** '
+elif p<0.05:
+    pstr='*  '
+elif p<0.1:
+    pstr='$^.$  '
+else:
+    pstr='   '
+                                   
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str + '\nR$^2$=' + '%.3f' % r**2 + pstr
+ax3.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
+
+ax3.set_ylabel('Leaf Height / m')
+ax3.set_xlabel('[N]$_{area}$ / g(N)m$^{-2}$')
+
+
+# N-area vs light
+ax3b = plt.subplot2grid((3,2),(0,1),sharey=ax1b)
+ax3b.annotate('b', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
+ax3b.plot(Narea[ftype=='OG'],light_availability[ftype=='OG'],'.',color='blue')
+ax3b.plot(Narea[ftype=='SL'],light_availability[ftype=='SL'],'.',color='red')
+
+mask = ~np.isnan(Narea[ftype=='OG']) & ~np.isnan(light_availability[ftype=='OG'])
+m1, c1, r1, p1, err1 = stats.linregress(Narea[ftype=='OG'][mask],light_availability[ftype=='OG'][mask])
+mask = ~np.isnan(Narea[ftype=='SL']) & ~np.isnan(light_availability[ftype=='SL'])
+m2, c2, r2, p2, err2 = stats.linregress(Narea[ftype=='SL'][mask],light_availability[ftype=='SL'][mask])
+mask = ~np.isnan(Narea) & ~np.isnan(light_availability)
+m, c, r, p, err = stats.linregress(Narea[mask],light_availability[mask])
+p1str=''
+if p1<0.001:
+    p1str='***'
+elif p1<0.01:
+    p1str='** '
+elif p1<0.05:
+    p1str='*  '
+elif p1<0.1:
+    p1str='$^.$  '
+else:
+    p1str='   '
+
+p2str=''
+if p2<0.001:
+    p2str='***'
+elif p2<0.01:
+    p2str='** '
+elif p2<0.05:
+    p2str='*  '
+elif p2<0.1:
+    p2str='$^.$  '
+else:
+    p2str='   '
+
+pstr=''
+if p<0.001:
+    pstr='***'
+elif p<0.01:
+    pstr='** '
+elif p<0.05:
+    pstr='*  '
+elif p<0.1:
+    pstr='$^.$  '
+else:
+    pstr='   '
+                                     
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str + '\nR$^2$=' + '%.3f' % r**2 + pstr
+ax3b.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
+
+ax3b.set_ylabel('Light availability')
+ax3b.set_xlabel('[N]$_{area}$ / g(N)m$^{-2}$')
+
+plt.tight_layout()
+plt.savefig('vertical_chemophoto_trait_distributions.png')
+
+
+
+# Figure 7 - photosynthesis vs. N:
+# Vcmax, Rd, N,
+plt.figure(7, facecolor='White',figsize=[6,6])
+
+# axis 2 - Narea vs. Vcmax
+ax1 = plt.subplot2grid((2,2),(0,0))
+ax1.annotate('a', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
+
+mask = ~np.isnan(Vcmax[ftype=='OG']) & ~np.isnan(Narea[ftype=='OG'])
+m1, c1, r1, p1, err1 = stats.linregress(Narea[ftype=='OG'][mask],Vcmax[ftype=='OG'][mask])
+mask = ~np.isnan(Vcmax[ftype=='SL']) & ~np.isnan(LeafHeight[ftype=='SL'])
+m2, c2, r2, p2, err2 = stats.linregress(Narea[ftype=='SL'][mask],Vcmax[ftype=='SL'][mask])
+mask = ~np.isnan(Vcmax) & ~np.isnan(Narea)
+m, c, r, p, err = stats.linregress(Narea[mask],Vcmax[mask])
+
+ax1.plot(Narea[ftype=='OG'],Vcmax[ftype=='OG'],'.',color='blue')
+ax1.plot(Narea[ftype=='SL'],Vcmax[ftype=='SL'],'.',color='red')
+
+p1str=''
+if p1<0.001:
+    p1str='***'
+elif p1<0.01:
+    p1str='** '
+elif p1<0.05:
+    p1str='*  '
+elif p1<0.1:
+    p1str='$^.$  '
+else:
+    p1str='   '
+
+p2str=''
+if p2<0.001:
+    p2str='***'
+elif p2<0.01:
+    p2str='** '
+elif p2<0.05:
+    p2str='*  '
+elif p2<0.1:
+    p2str='$^.$  '
+else:
+    p2str='   '
+
+pstr=''
+if p<0.001:
+    pstr='***'
+elif p<0.01:
+    pstr='** '
+elif p<0.05:
+    pstr='*  '
+elif p<0.1:
+    pstr='$^.$  '
+else:
+    pstr='   '
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str + '\nR$^2$=' + '%.3f' % r**2 + pstr
+ax1.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
+
+ax1.set_xlabel('[N]$_{area}$ / g(N)m$^{-2}$')
+ax1.set_ylabel('$V_{cmax}$')
+
+# Axis 2 Rd vs Narea
+ax2 = plt.subplot2grid((2,2),(0,1),sharex=ax1)
+ax2.annotate('b', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
+ax2.plot(Narea[ftype=='OG'],Rd[ftype=='OG'],'.',color='blue')
+ax2.plot(Narea[ftype=='SL'],Rd[ftype=='SL'],'.',color='red')
+
+mask = ~np.isnan(Rd[ftype=='OG']) & ~np.isnan(Narea[ftype=='OG'])
+m1, c1, r1, p1, err1 = stats.linregress(Narea[ftype=='OG'][mask],Rd[ftype=='OG'][mask])
+mask = ~np.isnan(Rd[ftype=='SL']) & ~np.isnan(Narea[ftype=='SL'])
+m2, c2, r2, p2, err2 = stats.linregress(Narea[ftype=='SL'][mask],Rd[ftype=='SL'][mask])
+mask = ~np.isnan(Rd) & ~np.isnan(Narea)
+m, c, r, p, err = stats.linregress(Narea[mask],Rd[mask])
+p1str=''
+if p1<0.001:
+    p1str='***'
+elif p1<0.01:
+    p1str='** '
+elif p1<0.05:
+    p1str='*  '
+elif p1<0.1:
+    p1str='$^.$  '
+else:
+    p1str='   '
+
+p2str=''
+if p2<0.001:
+    p2str='***'
+elif p2<0.01:
+    p2str='** '
+elif p2<0.05:
+    p2str='*  '
+elif p2<0.1:
+    p2str='$^.$  '
+else:
+    p2str='   '
+
+pstr=''
+if p<0.001:
+    pstr='***'
+elif p<0.01:
+    pstr='** '
+elif p<0.05:
+    pstr='*  '
+elif p<0.1:
+    pstr='$^.$  '
+else:
+    pstr='   '
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str + '\nR$^2$=' + '%.3f' % r**2 + pstr
+ax2.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
+
+ax2.set_xlabel('[N]$_{area}$ / g(N)m$^{-2}$')
+ax2.set_ylabel('$R_d$')
+
+# axis 3 - Stomatal conductance vs. Vcmax
+ax3 = plt.subplot2grid((2,2),(1,0),sharey=ax1)
+ax3.annotate('c', xy=(0.05,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2) 
+
+mask = ~np.isnan(Vcmax[ftype=='OG']) & ~np.isnan(gs[ftype=='OG'])
+m1, c1, r1, p1, err1 = stats.linregress(gs[ftype=='OG'][mask],Vcmax[ftype=='OG'][mask])
+mask = ~np.isnan(Vcmax[ftype=='SL']) & ~np.isnan(gs[ftype=='SL'])
+m2, c2, r2, p2, err2 = stats.linregress(gs[ftype=='SL'][mask],Vcmax[ftype=='SL'][mask])
+mask = ~np.isnan(Vcmax) & ~np.isnan(gs)
+m, c, r, p, err = stats.linregress(gs[mask],Vcmax[mask])
+
+ax3.plot(gs[ftype=='OG'],Vcmax[ftype=='OG'],'.',color='blue')
+ax3.plot(gs[ftype=='SL'],Vcmax[ftype=='SL'],'.',color='red')
+
+p1str=''
+if p1<0.001:
+    p1str='***'
+elif p1<0.01:
+    p1str='** '
+elif p1<0.05:
+    p1str='*  '
+elif p1<0.1:
+    p1str='$^.$  '
+else:
+    p1str='   '
+
+p2str=''
+if p2<0.001:
+    p2str='***'
+elif p2<0.01:
+    p2str='** '
+elif p2<0.05:
+    p2str='*  '
+elif p2<0.1:
+    p2str='$^.$  '
+else:
+    p2str='   '
+
+pstr=''
+if p<0.001:
+    pstr='***'
+elif p<0.01:
+    pstr='** '
+elif p<0.05:
+    pstr='*  '
+elif p<0.1:
+    pstr='$^.$  '
+else:
+    pstr='   '
+
+stats_str = 'R$^2$=' + '%.3f' % r1**2 + p1str + '\nR$^2$=' + '%.3f' % r2**2 + p2str + '\nR$^2$=' + '%.3f' % r**2 + pstr
+ax3.annotate(stats_str, xy=(0.95,0.95), xycoords='axes fraction',backgroundcolor='none',horizontalalignment='right', verticalalignment='top', fontsize=rcParams['font.size']) 
+
+ax3.set_xlabel('stomatal conductance')
+ax3.set_ylabel('$V_{cmax}$')
+
+
+
+plt.tight_layout()
+plt.savefig('photo_N.png')
 plt.show()
