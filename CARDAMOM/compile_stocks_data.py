@@ -297,3 +297,42 @@ plt.tight_layout()
 plt.savefig('SAFE_Cwood_npp.png')
 plt.show()
 
+
+
+# Figure 6 violin plots of subplot level biomass stocks
+                              
+plot =        [ 'Belian',   'Seraya',  'LF',     'E'   ,'B North','B South']
+fill_colors = [ '#45E900','#45E900','#1A2CCE','#1A2CCE','#E0007F','#E0007F']
+plt.figure(6, facecolor='White',figsize=[8,4])
+ax1 = plt.subplot2grid((1,1),(0,0))
+x_offs = [0.5,1.5,2.5,3.5,4.5,5.5]
+
+Cwood = census[plot[pp]]['C_wood'][*25./1000.
+
+for pp in range(0,N):
+    plt2.violin_plot(ax1,LiDAR_MacHorn_LAI[plot[pp]],color=fill_colors[pp],alpha='0.8',x_offset=x_offs[pp])
+    
+# configure plot
+ax1.annotate('Carbon stocks in woody biomass', xy=(0.05,0.95), xycoords='axes fraction',horizontalalignment='left', verticalalignment='top', fontsize=rcParams['font.size']+2,backgroundcolor='white') 
+
+ax1.set_ylabel('Cwood / Mg ha$^{-1}$', fontsize = axis_size)
+
+x_locs = [0.5,1.5,2.5,3.5,4.5,5.5,6.5,7.5]
+ax1.set_xticks(x_locs)
+xticks=ax1.get_xticks().tolist()
+xticks[0]='Belian'
+xticks[1]='Seraya'
+xticks[3]='E'
+xticks[4]='LF'
+xticks[5]='B North'
+xticks[6]='B South'
+ax1.set_xticklabels(xticks,rotation=90,fontsize=axis_size)
+
+plt.subplots_adjust(hspace=0.001,wspace=0.001)
+
+plt.tight_layout()
+plt.savefig('Cwood_violins_comparison.png')
+
+
+plt.show()
+                       
