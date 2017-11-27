@@ -41,12 +41,12 @@ def get_litterfall_ts(litter_file,plot):
     collection_dates = []
     previous_collection_dates = []
     litter_fall = []
-    for i in range(0,litter[plot]['rTotal'].shape[1]):
+    for i in range(0,litter[plot]['mLeaves'].shape[1]):
         collection_dates.append(np.max(litter[plot]['CollectionDate'][:,i]))
         previous_collection_dates.append(np.max(litter[plot]['PreviousCollectionDate'][:,i]))
         
         # avoid nodata for missing/destroyed traps
-        jj = np.isfinite(litter[plot]['rTotal'][:,i])
-        litter_fall.append(np.mean(litter[plot]['rTotal'][jj,i]))
+        jj = np.isfinite(litter[plot]['mLeaves'][:,i])
+        litter_fall.append(np.mean(litter[plot]['mLeaves'][jj,i]))
         
     return np.asarray(collection_dates), np.asarray(previous_collection_dates), np.asarray(litter_fall)
