@@ -568,6 +568,7 @@ def collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_f
     branch_C = np.zeros(N)*np.nan
     branch_CNratio = np.zeros(N)*np.nan
     branch_LeafHeight = np.zeros(N)*np.nan
+    branch_gs = np.zeros(N)*np.nan
     branch_spp = []
     branch_Ftype = []
     for i in range(0,N):
@@ -599,7 +600,8 @@ def collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_f
         # get photo info
         if np.sum(branch_ID_photo==br)>0:
             branch_VPD[i]=np.mean(VPD[branch_ID_photo==br])
-            branch_Rd[i]=np.mean(Rd[branch_ID_photo==br])
+            branch_Rd[i]=np.mean(Rd[branch_ID_photo==br])    
+            branch_gs[i]=np.mean(gs[branch_ID_photo==br])
             branch_Vcmax[i]=np.mean(Vcmax[branch_ID_photo==br])
             branch_Jmax[i]=np.mean(Jmax[branch_ID_photo==br])
             if np.isnan(branch_ShadeTag[i]):
@@ -626,7 +628,7 @@ def collate_branch_level_traits(chem_file,photo_file,branch_file,leaf_file,spp_f
     species = np.asarray(branch_spp)
     ForestType = np.asarray(branch_Ftype)
 
-    return unique_branches, species, genus, branch_N, branch_Na, branch_C, branch_CNratio, branch_SLA, branch_LMA, branch_LeafArea, branch_LeafThickness, branch_LeafHeight, branch_VPD, branch_Rd, branch_Vcmax, branch_Jmax, branch_ShadeTag, ForestType
+    return unique_branches, species, genus, branch_N, branch_Na, branch_C, branch_CNratio, branch_SLA, branch_LMA, branch_LeafArea, branch_LeafThickness, branch_LeafHeight, branch_VPD, branch_Rd, branch_Vcmax, branch_Jmax, branch_ShadeTag, branch_gs, ForestType
 
 
 
@@ -1253,13 +1255,13 @@ def read_litterfall_data(litter_file):
             cDates = np.zeros(N_collections, dtype = 'datetime64[D]')
             pDates = np.zeros(N_collections, dtype = 'datetime64[D]')
             
-            # mass collected by component
-            mLeaves.append(subplot_data['mLeaves'])
-            mTwigs.append(subplot_data['mTwigs'])
-            mFruit.append(subplot_data['mFruit'])
-            mFlowers.append(subplot_data['mFlowers'])
-            mSeeds.append(subplot_data['mSeeds'])
-            mMisc.append(subplot_data['mMisc'])
+            # mass collected by component - note that masses need converting from g per trap to g m-2
+            mLeaves.append(subplot_data['mLeaves']/subplot_data['TrapSize'])
+            mTwigs.append(subplot_data['mTwigs']/subplot_data['TrapSize'])
+            mFruit.append(subplot_data['mFruit']/subplot_data['TrapSize'])
+            mFlowers.append(subplot_data['mFlowers']/subplot_data['TrapSize'])
+            mSeeds.append(subplot_data['mSeeds']/subplot_data['TrapSize'])
+            mMisc.append(subplot_data['mMisc']/subplot_data['TrapSize'])
             # Rates of litter fall by component
             rLeaves.append(subplot_data['Leaves'])
             rTwigs.append(subplot_data['Twigs'])
